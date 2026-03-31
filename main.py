@@ -43,3 +43,40 @@ print(f"└── {LY}{bold}4{RST}{W}. Batches{RST}")
 print(f"    {LY}├── Enter {LY}{itlc}{bold}4.1{RST}{LB} {Y}→ {RST}Add new batch")
 print(f"    {LY}├── Enter {LY}{itlc}{bold}4.2{RST}{LB} {Y}→ {RST}Update batch timing")
 print(f"    {LY}└── Enter {LY}{itlc}{bold}4.3{RST}{LB} {Y}→ {RST}Remove batch\n\n")
+
+
+
+try:
+        # Taking user's choice as input from the options in the above list
+        while True:     # Iterate till the input is fully valid
+                selector = input(f"Enter the choice from the above list: {Y}")  # Take an input in the form "a.b" where a, b are integers (expected)
+                selector = selector.split(".")          # Converting the input string "a.b" to a list ["a", "b"] (expected)
+
+                print(W, end="")
+
+                # Input verification
+                # Check number of components in the list formed
+                if len(selector) == 2:
+                        # Try to convert both elements in the list to an integer
+                        try:
+                                i = 0
+                                while i < len(selector):
+                                        selector[i] = int(selector[i])
+                                        i += 1
+
+                                # Check if both components of the input are in range
+                                if selector[0] >= 1 and selector[0] <= 4:
+                                        if selector[1] >= 1 and selector[1] <= 3:
+                                                break
+                                        else:
+                                                print("Out of range sub index\n")
+                                else:
+                                        print("Out of range index\n")
+                        except ValueError:
+                                print("Invalid Input\n")
+                        except Exception as e:
+                                print(f"An unknown error occured, {e}\n")
+                else:
+                        print("Invalid input\n")
+except Exception as e:
+        print("An unknown error occured\n", e, sep="")
