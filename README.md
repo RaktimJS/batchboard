@@ -1,4 +1,4 @@
-# Batchboard v0.0
+# Batchboard v0.1
 
 ### Batchboard is a proprietary software designed to make managing a tuition center simpler
 
