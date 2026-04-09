@@ -67,6 +67,8 @@ try:
                                 # Check if both components of the input are in range
                                 if selector[0] >= 1 and selector[0] <= 4:
                                         if selector[1] >= 1 and selector[1] <= 3:
+                                                groupOp, featureOp = tuple(selector)
+                                                print("\n")
                                                 break
                                         else:
                                                 print("Out of range sub index\n")
