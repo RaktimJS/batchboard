@@ -80,5 +80,42 @@ try:
                                 print(f"An unknown error occured, {e}\n")
                 else:
                         print("Invalid input\n")
+        
+
+
+
+        # Creating blocks to be executed based on the index and sub index
+        if groupOp == 1:
+                print("Students")
+                if featureOp == 1:
+                        print("Add new student")
+                elif featureOp == 2:
+                        print("View student details")
+                else:
+                        print("Remove student")
+        elif groupOp == 2:
+                print("Tests")
+                if featureOp == 1:
+                        print("Issue new test")
+                elif featureOp == 2:
+                        print("Log test performance")
+                else:
+                        print("View test details")
+        elif groupOp == 3:
+                print("Fees")
+                if featureOp == 1:
+                        print("Issue new fee")
+                elif featureOp == 2:
+                        print("Update fee payment status")
+                else:
+                        print("View fee details")
+        else:
+                print("Batch")
+                if featureOp == 1:
+                        print("Add new batch")
+                elif featureOp == 2:
+                        print("Update batch timing")
+                else:
+                        print("Remove batch")
 except Exception as e:
         print("An unknown error occured\n", e, sep="")
