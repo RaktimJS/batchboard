@@ -22,27 +22,27 @@ n = "\033[0m"
 
 
 # Operation selection list
-print(f"{Y}Batchboard v0.1{n}")
+print(f"{Y}TuitionDesk v0.1{n}")
 
 print(f"├── {LY}{b}1{n}{W}. Students{n}")
-print(f"│   {LY}├── Enter {LY}{i}{b}1.1{n}{LB} {Y}→ {n}Add new student")
-print(f"│   {LY}├── Enter {LY}{i}{b}1.2{n}{LB} {Y}→ {n}View student details")
-print(f"│   {LY}└── Enter {LY}{i}{b}1.3{n}{LB} {Y}→ {n}Remove student")
+print(f"│   {LY}├── Enter {LY}{i}{b}1.1{n}{LB} {Y}→{n} Add new student")
+print(f"│   {LY}├── Enter {LY}{i}{b}1.2{n}{LB} {Y}→{n} View student details")
+print(f"│   {LY}└── Enter {LY}{i}{b}1.3{n}{LB} {Y}→{n} Remove student")
 
 print(f"├── {LY}{b}2{n}{W}. Tests{n}")
-print(f"│   {LY}├── Enter {LY}{i}{b}2.1{n}{LB} {Y}→ {n}Issue new test")
-print(f"│   {LY}├── Enter {LY}{i}{b}2.2{n}{LB} {Y}→ {n}Log test performance")
-print(f"│   {LY}└── Enter {LY}{i}{b}2.3{n}{LB} {Y}→ {n}View test details")
+print(f"│   {LY}├── Enter {LY}{i}{b}2.1{n}{LB} {Y}→{n} Issue new test")
+print(f"│   {LY}├── Enter {LY}{i}{b}2.2{n}{LB} {Y}→{n} Log test performance")
+print(f"│   {LY}└── Enter {LY}{i}{b}2.3{n}{LB} {Y}→{n} View test details")
 
 print(f"├── {LY}{b}3{n}{W}. Fees{n}")
-print(f"│   {LY}├── Enter {LY}{i}{b}3.1{n}{LB} {Y}→ {n}Issue new fee")
-print(f"│   {LY}├── Enter {LY}{i}{b}3.2{n}{LB} {Y}→ {n}Update fee payment status")
-print(f"│   {LY}└── Enter {LY}{i}{b}3.3{n}{LB} {Y}→ {n}View fee details")
+print(f"│   {LY}├── Enter {LY}{i}{b}3.1{n}{LB} {Y}→{n} Issue new fee")
+print(f"│   {LY}├── Enter {LY}{i}{b}3.2{n}{LB} {Y}→{n} Update fee payment status")
+print(f"│   {LY}└── Enter {LY}{i}{b}3.3{n}{LB} {Y}→{n} View fee details")
 
 print(f"└── {LY}{b}4{n}{W}. Batches{n}")
-print(f"    {LY}├── Enter {LY}{i}{b}4.1{n}{LB} {Y}→ {n}Add new batch")
-print(f"    {LY}├── Enter {LY}{i}{b}4.2{n}{LB} {Y}→ {n}Update batch timing")
-print(f"    {LY}└── Enter {LY}{i}{b}4.3{n}{LB} {Y}→ {n}Remove batch\n\n")
+print(f"    {LY}├── Enter {LY}{i}{b}4.1{n}{LB} {Y}→{n} Add new batch")
+print(f"    {LY}├── Enter {LY}{i}{b}4.2{n}{LB} {Y}→{n} Update batch timing")
+print(f"    {LY}└── Enter {LY}{i}{b}4.3{n}{LB} {Y}→{n} Remove batch\n\n")
 
 
 
