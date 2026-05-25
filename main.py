@@ -12,37 +12,37 @@ W = "\033[38;2;212;212;212m"
 LB = "\033[38;2;135;206;235m"
 LY = "\033[38;2;255;255;153m"
 
-bold = "\033[1m"
-itlc = "\033[3m"
-undrln = "\033[4m"
+b = "\033[1m"
+i = "\033[3m"
+u = "\033[4m"
 
-RST = "\033[0m"
+n = "\033[0m"
 
 
 
 
 # Operation selection list
-print(f"{Y}Batchboard v0.1{RST}")
+print(f"{Y}Batchboard v0.1{n}")
 
-print(f"├── {LY}{bold}1{RST}{W}. Students{RST}")
-print(f"│   {LY}├── Enter {LY}{itlc}{bold}1.1{RST}{LB} {Y}→ {RST}Add new student")
-print(f"│   {LY}├── Enter {LY}{itlc}{bold}1.2{RST}{LB} {Y}→ {RST}View student details")
-print(f"│   {LY}└── Enter {LY}{itlc}{bold}1.3{RST}{LB} {Y}→ {RST}Remove student")
+print(f"├── {LY}{b}1{n}{W}. Students{n}")
+print(f"│   {LY}├── Enter {LY}{i}{b}1.1{n}{LB} {Y}→ {n}Add new student")
+print(f"│   {LY}├── Enter {LY}{i}{b}1.2{n}{LB} {Y}→ {n}View student details")
+print(f"│   {LY}└── Enter {LY}{i}{b}1.3{n}{LB} {Y}→ {n}Remove student")
 
-print(f"├── {LY}{bold}2{RST}{W}. Tests{RST}")
-print(f"│   {LY}├── Enter {LY}{itlc}{bold}2.1{RST}{LB} {Y}→ {RST}Issue new test")
-print(f"│   {LY}├── Enter {LY}{itlc}{bold}2.2{RST}{LB} {Y}→ {RST}Log test performance")
-print(f"│   {LY}└── Enter {LY}{itlc}{bold}2.3{RST}{LB} {Y}→ {RST}View test details")
+print(f"├── {LY}{b}2{n}{W}. Tests{n}")
+print(f"│   {LY}├── Enter {LY}{i}{b}2.1{n}{LB} {Y}→ {n}Issue new test")
+print(f"│   {LY}├── Enter {LY}{i}{b}2.2{n}{LB} {Y}→ {n}Log test performance")
+print(f"│   {LY}└── Enter {LY}{i}{b}2.3{n}{LB} {Y}→ {n}View test details")
 
-print(f"├── {LY}{bold}3{RST}{W}. Fees{RST}")
-print(f"│   {LY}├── Enter {LY}{itlc}{bold}3.1{RST}{LB} {Y}→ {RST}Issue new fee")
-print(f"│   {LY}├── Enter {LY}{itlc}{bold}3.2{RST}{LB} {Y}→ {RST}Update fee payment status")
-print(f"│   {LY}└── Enter {LY}{itlc}{bold}3.3{RST}{LB} {Y}→ {RST}View fee details")
+print(f"├── {LY}{b}3{n}{W}. Fees{n}")
+print(f"│   {LY}├── Enter {LY}{i}{b}3.1{n}{LB} {Y}→ {n}Issue new fee")
+print(f"│   {LY}├── Enter {LY}{i}{b}3.2{n}{LB} {Y}→ {n}Update fee payment status")
+print(f"│   {LY}└── Enter {LY}{i}{b}3.3{n}{LB} {Y}→ {n}View fee details")
 
-print(f"└── {LY}{bold}4{RST}{W}. Batches{RST}")
-print(f"    {LY}├── Enter {LY}{itlc}{bold}4.1{RST}{LB} {Y}→ {RST}Add new batch")
-print(f"    {LY}├── Enter {LY}{itlc}{bold}4.2{RST}{LB} {Y}→ {RST}Update batch timing")
-print(f"    {LY}└── Enter {LY}{itlc}{bold}4.3{RST}{LB} {Y}→ {RST}Remove batch\n\n")
+print(f"└── {LY}{b}4{n}{W}. Batches{n}")
+print(f"    {LY}├── Enter {LY}{i}{b}4.1{n}{LB} {Y}→ {n}Add new batch")
+print(f"    {LY}├── Enter {LY}{i}{b}4.2{n}{LB} {Y}→ {n}Update batch timing")
+print(f"    {LY}└── Enter {LY}{i}{b}4.3{n}{LB} {Y}→ {n}Remove batch\n\n")
 
 
 
