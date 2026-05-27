@@ -23,99 +23,66 @@ n = "\033[0m"
 
 # Operation selection list
 print(f"{Y}TuitionDesk v0.1{n}")
-
-print(f"├── {LY}{b}1{n}{W}. Students{n}")
-print(f"│   {LY}├── Enter {LY}{i}{b}1.1{n}{LB} {Y}→{n} Add new student")
-print(f"│   {LY}├── Enter {LY}{i}{b}1.2{n}{LB} {Y}→{n} View student details")
-print(f"│   {LY}└── Enter {LY}{i}{b}1.3{n}{LB} {Y}→{n} Remove student")
-
-print(f"├── {LY}{b}2{n}{W}. Tests{n}")
-print(f"│   {LY}├── Enter {LY}{i}{b}2.1{n}{LB} {Y}→{n} Issue new test")
-print(f"│   {LY}├── Enter {LY}{i}{b}2.2{n}{LB} {Y}→{n} Log test performance")
-print(f"│   {LY}└── Enter {LY}{i}{b}2.3{n}{LB} {Y}→{n} View test details")
-
-print(f"├── {LY}{b}3{n}{W}. Fees{n}")
-print(f"│   {LY}├── Enter {LY}{i}{b}3.1{n}{LB} {Y}→{n} Issue new fee")
-print(f"│   {LY}├── Enter {LY}{i}{b}3.2{n}{LB} {Y}→{n} Update fee payment status")
-print(f"│   {LY}└── Enter {LY}{i}{b}3.3{n}{LB} {Y}→{n} View fee details")
-
-print(f"└── {LY}{b}4{n}{W}. Batches{n}")
-print(f"    {LY}├── Enter {LY}{i}{b}4.1{n}{LB} {Y}→{n} Add new batch")
-print(f"    {LY}├── Enter {LY}{i}{b}4.2{n}{LB} {Y}→{n} Update batch timing")
-print(f"    {LY}└── Enter {LY}{i}{b}4.3{n}{LB} {Y}→{n} Remove batch\n\n")
-
-
+print(f"    {LY}├── Enter {i}{b}1{n}  {Y}→{n} Add new student")
+print(f"    {LY}├── Enter {i}{b}2{n}  {Y}→{n} View student details")
+print(f"    {LY}├── Enter {i}{b}3{n}  {Y}→{n} Remove student")
+print(f"    {LY}├── Enter {i}{b}4{n}  {Y}→{n} Issue new test")
+print(f"    {LY}├── Enter {i}{b}5{n}  {Y}→{n} Log test performance")
+print(f"    {LY}├── Enter {i}{b}6{n}  {Y}→{n} View test details")
+print(f"    {LY}├── Enter {i}{b}7{n}  {Y}→{n} Issue new fee")
+print(f"    {LY}├── Enter {i}{b}8{n}  {Y}→{n} Update fee payment status")
+print(f"    {LY}├── Enter {i}{b}9{n}  {Y}→{n} View fee details")
+print(f"    {LY}├── Enter {i}{b}10{n} {Y}→{n} Add new batch")
+print(f"    {LY}├── Enter {i}{b}11{n} {Y}→{n} Update batch timing")
+print(f"    {LY}├── Enter {i}{b}12{n} {Y}→{n} Remove batch")
+print(f"    {LY}└── Enter {i}{b}13{n} {Y}→{n} Log New Session\n")
 
 try:
         # Taking user's choice as input from the options in the above list
         while True:     # Iterate till the input is fully valid
-                selector = input(f"Enter the choice from the above list: {Y}")  # Take an input in the form "a.b" where a, b are integers (expected)
-                selector = selector.split(".")          # Converting the input string "a.b" to a list ["a", "b"] (expected)
+                selector = input("Enter your choice from the above list: ")
 
-                print(W, end="")
+                try:
+                        selector = int(selector)
 
-                # Input verification
-                # Check number of components in the list formed
-                if len(selector) == 2:
-                        # Try to convert both elements in the list to an integer
-                        try:
-                                i = 0
-                                while i < len(selector):
-                                        selector[i] = int(selector[i])
-                                        i += 1
+                        if selector >= 1 and selector <= 13:
+                                break
+                        else:
+                                print("Out of range input\n")
+                except ValueError:
+                        print("Invalid Input\n")
+                except EOFError:
+                        print("Invalid Input\n")
 
-                                # Check if both components of the input are in range
-                                if selector[0] >= 1 and selector[0] <= 4:
-                                        if selector[1] >= 1 and selector[1] <= 3:
-                                                groupOp, featureOp = tuple(selector)
-                                                print("\n")
-                                                break
-                                        else:
-                                                print("Out of range sub index\n")
-                                else:
-                                        print("Out of range index\n")
-                        except ValueError:
-                                print("Invalid Input\n")
-                        except Exception as e:
-                                print(f"An unknown error occured, {e}\n")
+                if selector == 1:
+                        print("Option 1")
+                elif selector == 2:
+                        print("Option 2")
+                elif selector == 3:
+                        print("Option 3")
+                elif selector == 4:
+                        print("Option 4")
+                elif selector == 5:
+                        print("Option 5")
+                elif selector == 6:
+                        print("Option 6")
+                elif selector == 7:
+                        print("Option 7")
+                elif selector == 8:
+                        print("Option 8")
+                elif selector == 9:
+                        print("Option 9")
+                elif selector == 10:
+                        print("Option 10")
+                elif selector == 11:
+                        print("Option 11")
+                elif selector == 12:
+                        print("Option 12")
+                elif selector == 13:
+                        print("Option 13")
+                elif selector < 1:
+                        print("Option 1")
                 else:
-                        print("Invalid input\n")
-        
-
-
-
-        # Creating blocks to be executed based on the index and sub index
-        if groupOp == 1:
-                print("Students")
-                if featureOp == 1:
-                        print("Add new student")
-                elif featureOp == 2:
-                        print("View student details")
-                else:
-                        print("Remove student")
-        elif groupOp == 2:
-                print("Tests")
-                if featureOp == 1:
-                        print("Issue new test")
-                elif featureOp == 2:
-                        print("Log test performance")
-                else:
-                        print("View test details")
-        elif groupOp == 3:
-                print("Fees")
-                if featureOp == 1:
-                        print("Issue new fee")
-                elif featureOp == 2:
-                        print("Update fee payment status")
-                else:
-                        print("View fee details")
-        else:
-                print("Batch")
-                if featureOp == 1:
-                        print("Add new batch")
-                elif featureOp == 2:
-                        print("Update batch timing")
-                else:
-                        print("Remove batch")
+                        print("Option 13")
 except Exception as e:
         print("An unknown error occured\n", e, sep="")
