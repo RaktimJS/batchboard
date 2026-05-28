@@ -1,6 +1,15 @@
-# Entry poin to the system
+# Entry point to the system
 
-import os
+import os, sqlite3
+
+from functions import ask as ask
+
+
+
+
+# Database and Cursor
+db = sqlite3.connect("tuition.db")
+cur = db.cursor()
 
 os.system("cls")
 
