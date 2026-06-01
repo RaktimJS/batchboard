@@ -16,12 +16,10 @@ W = "\033[38;2;212;212;212m"
 LB = "\033[38;2;135;206;235m"
 LY = "\033[38;2;255;255;153m"
 
-b = "\033[1m"
 B = "\033[1m"
 I = "\033[3m"
 U = "\033[4m"
 
-n = "\033[0m"
 N = "\033[0m"
 
 
@@ -29,7 +27,6 @@ N = "\033[0m"
         Utility functions
 """
 # Query Executioner
-def ask(query:str, db:str):
 def ask(query:str, db:str = "tuition.db"):
         database = sqlite3.connect(db)
         cur = database.cursor()
@@ -69,9 +66,11 @@ def getAllID(name:str):
         else:
                 raise NameError
 
+def show_table(table_name:str, db:str = "tuition.db"):
         conn = sqlite3.connect(db)
         cursor = conn.cursor()
 
+        try:
                 cursor.execute(f"SELECT * FROM {table_name}")
 
                 rows = cursor.fetchall()
