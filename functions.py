@@ -3,6 +3,7 @@ Contains several functions that can be called whenever and wherever needed
 """
 
 import sqlite3
+from tabulate import tabulate
 
 
 
@@ -16,10 +17,12 @@ LB = "\033[38;2;135;206;235m"
 LY = "\033[38;2;255;255;153m"
 
 b = "\033[1m"
-i = "\033[3m"
-u = "\033[4m"
+B = "\033[1m"
+I = "\033[3m"
+U = "\033[4m"
 
 n = "\033[0m"
+N = "\033[0m"
 
 
 """
@@ -27,6 +30,7 @@ n = "\033[0m"
 """
 # Query Executioner
 def ask(query:str, db:str):
+def ask(query:str, db:str = "tuition.db"):
         database = sqlite3.connect(db)
         cur = database.cursor()
         cur.execute(query)
@@ -65,4 +69,23 @@ def getAllID(name:str):
         else:
                 raise NameError
 
+        conn = sqlite3.connect(db)
+        cursor = conn.cursor()
+
+                cursor.execute(f"SELECT * FROM {table_name}")
+
+                rows = cursor.fetchall()
+                headers = [column[0] for column in cursor.description]
+
+                if rows:
+                        print(tabulate(rows,
+                                       headers=headers,
+                                       tablefmt="psql"))
+                else:
+                        print(f"Table '{table_name}' is empty.")
+
+        except sqlite3.Error as e:
+                print(f"Error: {e}")
+        finally:
+                conn.close()
 
