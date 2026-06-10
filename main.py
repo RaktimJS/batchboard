@@ -47,47 +47,47 @@ print(f"    {LY}├── Enter {i}{b}12{n} {Y}→{n} Remove batch")
 print(f"    {LY}└── Enter {i}{b}13{n} {Y}→{n} Log New Session\n")
 
 try:
-        # Taking user's choice as input from the options in the above list
-        while True:     # Iterate till the input is fully valid
-                selector = input("Enter your choice from the above list: ")
+    # Taking user's choice as input from the options in the above list
+    while True:     # Iterate till the input is fully valid
+        selector = input("Enter your choice from the above list: ")
 
-                try:
-                        selector = int(selector)
+        try:
+            selector = int(selector)
 
-                        if selector >= 1 and selector <= 13:
-                                break
-                        else:
-                                print("Out of range input\n")
-                except ValueError:
-                        print("Invalid Input\n")
-                except EOFError:
-                        print("Invalid Input\n")
+            if selector >= 1 and selector <= 13:
+                break
+            else:
+                print("Out of range input\n")
+        except ValueError:
+            print("Invalid Input\n")
+        except EOFError:
+            print("Invalid Input\n")
 
-        if selector == 1:
-                print("Option 1")
-        elif selector == 2:
-                print("Option 2")
-        elif selector == 3:
-                print("Option 3")
-        elif selector == 4:
-                print("Option 4")
-        elif selector == 5:
-                print("Option 5")
-        elif selector == 6:
-                print("Option 6")
-        elif selector == 7:
-                print("Option 7")
-        elif selector == 8:
-                print("Option 8")
-        elif selector == 9:
-                print("Option 9")
-        elif selector == 10:
-                print("Option 10")
-        elif selector == 11:
-                print("Option 11")
-        elif selector == 12:
-                print("Option 12")
-        elif selector == 13:
-                print("Option 13")
+    if selector == 1:
+        print("Option 1")
+    elif selector == 2:
+        print("Option 2")
+    elif selector == 3:
+        print("Option 3")
+    elif selector == 4:
+        print("Option 4")
+    elif selector == 5:
+        print("Option 5")
+    elif selector == 6:
+        print("Option 6")
+    elif selector == 7:
+        print("Option 7")
+    elif selector == 8:
+        print("Option 8")
+    elif selector == 9:
+        print("Option 9")
+    elif selector == 10:
+        print("Option 10")
+    elif selector == 11:
+        print("Option 11")
+    elif selector == 12:
+        print("Option 12")
+    elif selector == 13:
+        print("Option 13")
 except Exception as e:
-        print("An unknown error occured\n", e, sep="")
+    print("An unknown error occured\n", e, sep="")
