@@ -61,8 +61,6 @@ def drawTable(query: str, db: str = "tuition.db"):
 
 
 
-        try:
-                cursor.execute(f"SELECT * FROM {table_name}")
 
         print(f"{BL}{B}Timing{N}")
         print(f"{Y}  Rules{LY}")
