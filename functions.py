@@ -61,6 +61,90 @@ def drawTable(query: str, db: str = "tuition.db"):
 
 
 
+"""
+    Core functions
+"""
+
+# New Batch Creator
+def addNewBatch():
+    db = sqlite3.connect("tuition.db")
+    cur = db.cursor()
+    
+    while True:
+        isSlotOccupied = False
+        dayTimeList = []
+
+        # Generate an ID for the batch
+        cur.execute("SELECT * FROM Batch")
+        batchNum = str(len(cur.fetchall()) + 1)
+
+        if len(batchNum) == 1:
+            batchNum = "0" + batchNum
+
+        b_id = "BAT-" + batchNum
+        print(f"Batch ID: {Y}{b_id}{N}")
+
+
+        # Fetching Class ID
+        while True:
+            try:
+                standard = int(input(f"Enter class (11 or 12 only): {Y}"))
+                print(W, end="")
+
+                if standard in [11, 12]:
+                    break
+                else:
+                    print("Out of range\n")
+            except ValueError:
+                print("Invalid Input\n")
+            except EOFError:
+                print("Invalid Input\n")
+        standard = str(standard)
+
+        cur.execute(f"SELECT Class_ID FROM Class WHERE Class_Name = \"Class {standard}\";")
+        c_id = cur.fetchall()[0][0]
+
+        # Batch Name
+        b_name = input(f"Enter the batch name: {Y}")
+        print(W, end="")
+
+        print("\n----------------------------------------\n")
+
+        print(f"{BL}{B}Day Selection{N}")
+        print("  Sunday")
+        print("  Monday")
+        print("  Tueday")
+        print("  Wednesday")
+        print("  Thursday")
+        print("  Friday")
+        print("  Saturday\n")
+
+        print("Enter the day of the week to select (or deselect) it\n")
+
+        dayList = []
+        i = 0
+        while True:
+            day = input(f"Select a day of the week (Type 'END' to end): {Y}").capitalize().strip()
+            print(W, end="")
+
+            if day == "End":
+                if len(dayList) < 1:
+                    print(f"{LB}Choose at least one day for the batch{W}\n")
+                else:
+                    break
+            else:
+                if day in ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]:
+                    if day in dayList:
+                        dayList.remove(day)
+                        print(f"{LB}{day}{W} removed")
+                    else:
+                        dayList.append(day)
+                        print(f"{LB}{day}{W} added")
+                else:
+                    print(f"{day} does not exist")
+
+        # Timing
+        print("\n----------------------------------------\n")
 
         print(f"{BL}{B}Timing{N}")
         print(f"{Y}  Rules{LY}")
@@ -207,4 +291,3 @@ def drawTable(query: str, db: str = "tuition.db"):
             print("Please try again\n")
             input("Hit ENTER to continue... ")
             __import__('os').system('cls')
-addNewBatch()
