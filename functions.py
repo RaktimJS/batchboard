@@ -2,7 +2,7 @@
 Contains several functions that can be called whenever and wherever needed
 """
 
-import sqlite3
+import sqlite3, time
 from tabulate import tabulate
 
 
@@ -94,11 +94,11 @@ def addNewBatch():
                 if standard in [11, 12]:
                     break
                 else:
-                    print("Out of range\n")
+                    print(f"{W}Out of range\n")
             except ValueError:
-                print("Invalid Input\n")
+                print(f"{W}Invalid Input\n")
             except EOFError:
-                print("Invalid Input\n")
+                print(f"{W}Invalid Input\n")
         standard = str(standard)
 
         cur.execute(f"SELECT Class_ID FROM Class WHERE Class_Name = \"Class {standard}\";")
@@ -141,7 +141,7 @@ def addNewBatch():
                         dayList.append(day)
                         print(f"{LB}{day}{W} added")
                 else:
-                    print(f"{day} does not exist")
+                    print(f"{W}{day} does not exist")
 
         # Timing
         print("\n----------------------------------------\n")
@@ -254,6 +254,8 @@ def addNewBatch():
         else:
             i = 0
             while i in range (len(dayList)):
+                print(f"  {Y}{dayList[i]}{W}")
+
                 while True:
                     time = input(f"    Time: {Y}")
                     print(N, end="")
@@ -285,9 +287,166 @@ def addNewBatch():
 
             db.commit()
             db.close()
+            print("\nDate population successful")
             break
         except Exception as e:
             print("\nAn error occured:", e)
             print("Please try again\n")
             input("Hit ENTER to continue... ")
             __import__('os').system('cls')
+
+# New Student
+def addNewStudent():
+    db = sqlite3.connect("tuition.db")
+    cur = db.cursor()
+    
+    name = input(f"Enter the name of the student: {Y}")
+    print(W, end="")
+
+    while True:
+        try:
+            standard = int(input(f"Enter class (11 or 12 only): {Y}"))
+            print(W, end="")
+
+            if standard in [11, 12]:
+                break
+            else:
+                print(f"    {W}Out of range")
+        except ValueError:
+            print(f"    {W}Invalid Input")
+        except EOFError:
+            print(f"    {W}Invalid Input")
+    standard = str(standard)
+
+    while True:
+        try:
+            phone = input(f"Enter phone number: {Y}")
+            print(W, end="")
+
+            if phone.isnumeric() and len(phone) == 10:
+                break
+            else:
+                print(f"{W}Invalid Phone Number")
+        except ValueError:
+            print(f"{W}Invalid Input\n")
+        except EOFError:
+            print(f"{W}Invalid Input\n")
+
+    print("\n----------------------------------------\n")
+
+    # Batch Selection
+    classID = "CLS-11" if standard == 11 else "CLS-12"
+    batchNameCombination = ask(f"SELECT Name, Batch_ID FROM Batch WHERE Class_ID = '{classID}'")
+    batchIDList = ask(f"SELECT Batch_ID FROM Batch WHERE Class_ID = '{classID}'")[0]
+
+    table = "  " + tabulate(batchNameCombination, headers=["Batch Name", "ID"], tablefmt="pretty").replace("\n", "\n  ")
+
+    print(f"{BL}{B}Batch Selection{N}")
+    print(f"  Batches in Class {standard}:")
+    print(table)
+    print()
+
+    while True:
+        batchID = input(f"  Select a batch from the above list (Enter the Batch ID): {Y}").strip().upper()
+        print(W, end="")
+
+        if batchID in batchIDList:
+            break
+        else:
+            print(f"\tBatch with ID {Y}{batchID}{W} not available in Class 12")
+
+    # Generating student ID
+    studNum = str(len(ask(f"SELECT * FROM Student;")) + 1)
+    studID = batchID + "-STU-0" + studNum if len(studNum) == 1 else batchID + "-STU-" + studNum
+
+    print("\n----------------------------------------\n")
+
+    def isDateValid(dateStr: str):
+        dateComponent = dateStr.strip().split("-")
+
+        monthLengthMap = {
+            1: 31, 2: 28, 3: 31,
+            4: 30, 5: 31, 6: 30,
+            7: 31, 8: 31, 9: 30,
+            10: 31, 11: 30, 12: 31
+        }
+
+        months = [
+            "January", "February", "March", "April",
+            "May", "June", "July", "August",
+            "September", "October", "November", "December"
+        ]
+
+        if (
+                len(dateComponent) != 3
+                and len(dateStr) != 10
+                and len(dateStr.replace("-", "")) == 8
+                and not dateStr.replace("-", "").isnumeric()
+                and dateStr[2] != "-"
+                and dateStr[5] != "-"
+            ):
+            return f"{R}Invalid format: Date should be in {LY}DD-MM-YYYY{R} format{W}"
+        else:
+            i = 0
+            while i in range(len(dateComponent)):
+                dateComponent[i] = int(dateComponent[i])
+                i += 1
+
+            if dateComponent[2] not in range(2020, 2101):
+                return f"{R}Invalid year component: Year should be an integer between 2020 and 2100 (Both included){W}"
+            else:
+                if dateComponent[1] not in range(1, 13):
+                    return f"{R}Invalid month component: Month should be an integer from 1 to 12{W}"
+                else:
+                    if dateComponent[0] == 29 and dateComponent[1] == 2 and dateComponent[2] % 4 == 0:
+                        return True
+                    elif dateComponent[0] > monthLengthMap[dateComponent[1]] and dateComponent[1] == 2:
+                        return f"{R}Invalid day component: {months[dateComponent[1] - 1]} {dateComponent[2]} has {monthLengthMap[dateComponent[1]]} days{W}"
+                    elif dateComponent[0] > monthLengthMap[dateComponent[1]] and dateComponent[1] != 2:
+                        return f"{R}Invalid day component: {months[dateComponent[1] - 1]} has {monthLengthMap[dateComponent[1]]} days{W}"
+                    else:
+                        return True
+
+    def fixDateFormat(dateStr: str):
+        dateComp = dateStr.split("-")
+        return f"{dateComp[2]}-{dateComp[1]}-{dateComp[0]}"
+
+    def getTodayDate():
+        year = str(tuple(time.localtime())[0])
+        month = str(tuple(time.localtime())[1])
+        day = str(tuple(time.localtime())[2])
+
+        if len(month) == 1:
+            month = "0" + month
+
+        if len(day) == 1:
+            day = "0" + day
+
+        return f"{year}-{month}-{day}"
+
+
+    # Date of joining
+    while True:
+        joinDate = input(f"Enter the joinDate of joining ('TODAY' if joined today): {Y}").strip()
+        print(W, end="")
+
+        if joinDate.lower() == "today":
+            joinDate = getTodayDate()
+            break
+        else:
+            if isDateValid(joinDate) == True:
+                joinDate = fixDateFormat(joinDate)
+                break
+            else:
+                print(f"  {isDateValid(joinDate)}")
+
+    try:
+        cur.execute(f"INSERT INTO Student VALUES ('{studID}', '{batchID}', '{name}', '{phone}', '{joinDate}', 0)")
+        db.commit()
+        db.close()
+        print("\nDate population successful")
+    except Exception as e:
+        print("\nAn error occured:", e)
+        print("Please try again\n")
+        input("Hit ENTER to continue... ")
+        __import__('os').system('cls')
