@@ -59,6 +59,69 @@ def drawTable(query: str, db: str = "tuition.db"):
         conn.close()
 
 
+# Functions for handling dates
+def isDateValid(dateStr: str):
+    dateComponent = dateStr.strip().split("-")
+
+    monthLengthMap = {
+        1: 31, 2: 28, 3: 31,
+        4: 30, 5: 31, 6: 30,
+        7: 31, 8: 31, 9: 30,
+        10: 31, 11: 30, 12: 31
+    }
+
+    months = [
+        "January", "February", "March", "April",
+        "May", "June", "July", "August",
+        "September", "October", "November", "December"
+    ]
+
+    if (
+            len(dateComponent) != 3
+            and len(dateStr) != 10
+            and len(dateStr.replace("-", "")) == 8
+            and not dateStr.replace("-", "").isnumeric()
+            and dateStr[2] != "-"
+            and dateStr[5] != "-"
+        ):
+        return f"{R}Invalid format: Date should be in {LY}DD-MM-YYYY{R} format{W}"
+    else:
+        i = 0
+        while i in range(len(dateComponent)):
+            dateComponent[i] = int(dateComponent[i])
+            i += 1
+
+        if dateComponent[2] not in range(2020, 2101):
+            return f"{R}Invalid year component: Year should be an integer between 2020 and 2100 (Both included){W}"
+        else:
+            if dateComponent[1] not in range(1, 13):
+                return f"{R}Invalid month component: Month should be an integer from 1 to 12{W}"
+            else:
+                if dateComponent[0] == 29 and dateComponent[1] == 2 and dateComponent[2] % 4 == 0:
+                    return True
+                elif dateComponent[0] > monthLengthMap[dateComponent[1]] and dateComponent[1] == 2:
+                    return f"{R}Invalid day component: {months[dateComponent[1] - 1]} {dateComponent[2]} has {monthLengthMap[dateComponent[1]]} days{W}"
+                elif dateComponent[0] > monthLengthMap[dateComponent[1]] and dateComponent[1] != 2:
+                    return f"{R}Invalid day component: {months[dateComponent[1] - 1]} has {monthLengthMap[dateComponent[1]]} days{W}"
+                else:
+                    return True
+
+def fixDateFormat(dateStr: str):
+    dateComp = dateStr.split("-")
+    return f"{dateComp[2]}-{dateComp[1]}-{dateComp[0]}"
+
+def getTodayDate():
+    year = str(tuple(time.localtime())[0])
+    month = str(tuple(time.localtime())[1])
+    day = str(tuple(time.localtime())[2])
+
+    if len(month) == 1:
+        month = "0" + month
+
+    if len(day) == 1:
+        day = "0" + day
+
+    return f"{year}-{month}-{day}"
 
 
 """
@@ -295,6 +358,7 @@ def addNewBatch():
             input("Hit ENTER to continue... ")
             __import__('os').system('cls')
 
+
 # New Student
 def addNewStudent():
     db = sqlite3.connect("tuition.db")
@@ -361,73 +425,9 @@ def addNewStudent():
 
     print("\n----------------------------------------\n")
 
-    def isDateValid(dateStr: str):
-        dateComponent = dateStr.strip().split("-")
-
-        monthLengthMap = {
-            1: 31, 2: 28, 3: 31,
-            4: 30, 5: 31, 6: 30,
-            7: 31, 8: 31, 9: 30,
-            10: 31, 11: 30, 12: 31
-        }
-
-        months = [
-            "January", "February", "March", "April",
-            "May", "June", "July", "August",
-            "September", "October", "November", "December"
-        ]
-
-        if (
-                len(dateComponent) != 3
-                and len(dateStr) != 10
-                and len(dateStr.replace("-", "")) == 8
-                and not dateStr.replace("-", "").isnumeric()
-                and dateStr[2] != "-"
-                and dateStr[5] != "-"
-            ):
-            return f"{R}Invalid format: Date should be in {LY}DD-MM-YYYY{R} format{W}"
-        else:
-            i = 0
-            while i in range(len(dateComponent)):
-                dateComponent[i] = int(dateComponent[i])
-                i += 1
-
-            if dateComponent[2] not in range(2020, 2101):
-                return f"{R}Invalid year component: Year should be an integer between 2020 and 2100 (Both included){W}"
-            else:
-                if dateComponent[1] not in range(1, 13):
-                    return f"{R}Invalid month component: Month should be an integer from 1 to 12{W}"
-                else:
-                    if dateComponent[0] == 29 and dateComponent[1] == 2 and dateComponent[2] % 4 == 0:
-                        return True
-                    elif dateComponent[0] > monthLengthMap[dateComponent[1]] and dateComponent[1] == 2:
-                        return f"{R}Invalid day component: {months[dateComponent[1] - 1]} {dateComponent[2]} has {monthLengthMap[dateComponent[1]]} days{W}"
-                    elif dateComponent[0] > monthLengthMap[dateComponent[1]] and dateComponent[1] != 2:
-                        return f"{R}Invalid day component: {months[dateComponent[1] - 1]} has {monthLengthMap[dateComponent[1]]} days{W}"
-                    else:
-                        return True
-
-    def fixDateFormat(dateStr: str):
-        dateComp = dateStr.split("-")
-        return f"{dateComp[2]}-{dateComp[1]}-{dateComp[0]}"
-
-    def getTodayDate():
-        year = str(tuple(time.localtime())[0])
-        month = str(tuple(time.localtime())[1])
-        day = str(tuple(time.localtime())[2])
-
-        if len(month) == 1:
-            month = "0" + month
-
-        if len(day) == 1:
-            day = "0" + day
-
-        return f"{year}-{month}-{day}"
-
-
     # Date of joining
     while True:
-        joinDate = input(f"Enter the joinDate of joining ('TODAY' if joined today): {Y}").strip()
+        joinDate = input(f"Enter the date of joining ('TODAY' if joined today): {Y}").strip()
         print(W, end="")
 
         if joinDate.lower() == "today":
