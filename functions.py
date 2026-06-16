@@ -582,5 +582,3 @@ def issueNewTest():
         input("Hit ENTER to continue... ")
         __import__('os').system('cls')
         issueNewTest()
-
-
