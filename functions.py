@@ -83,231 +83,230 @@ def fixDateFormat(dateStr: str):
 def addNewBatch():
     db = sqlite3.connect("tuition.db")
     cur = db.cursor()
-    
+
+    isSlotOccupied = False
+    dayTimeList = []
+
+    # Generate an ID for the batch
+    cur.execute("SELECT * FROM Batch")
+    batchNum = str(len(cur.fetchall()) + 1)
+
+    if len(batchNum) == 1:
+        batchNum = "0" + batchNum
+
+    batchID = "BAT-" + batchNum
+    print(f"Batch ID: {Y}{batchID}{N}")
+
+
+    # Fetching Class ID
     while True:
-        isSlotOccupied = False
-        dayTimeList = []
-
-        # Generate an ID for the batch
-        cur.execute("SELECT * FROM Batch")
-        batchNum = str(len(cur.fetchall()) + 1)
-
-        if len(batchNum) == 1:
-            batchNum = "0" + batchNum
-
-        batchID = "BAT-" + batchNum
-        print(f"Batch ID: {Y}{batchID}{N}")
-
-
-        # Fetching Class ID
-        while True:
-            try:
-                standard = int(input(f"Enter class (11 or 12 only): {Y}"))
-                print(W, end="")
-
-                if standard in [11, 12]:
-                    break
-                else:
-                    print(f"{W}Out of range\n")
-            except ValueError:
-                print(f"{W}Invalid Input\n")
-            except EOFError:
-                print(f"{W}Invalid Input\n")
-        standard = str(standard)
-
-        cur.execute(f"SELECT Class_ID FROM Class WHERE Class_Name = \"Class {standard}\";")
-        classID = cur.fetchall()[0][0]
-
-        # Batch Name
-        batchName = input(f"Enter the batch name: {Y}")
-        print(W, end="")
-
-        print("\n----------------------------------------\n")
-
-        print(f"{BL}{B}Day Selection{N}")
-        print("  Sunday")
-        print("  Monday")
-        print("  Tueday")
-        print("  Wednesday")
-        print("  Thursday")
-        print("  Friday")
-        print("  Saturday\n")
-
-        print("Enter the day of the week to select (or deselect) it\n")
-
-        dayList = []
-        i = 0
-        while True:
-            day = input(f"Select a day of the week (Type 'END' to end): {Y}").capitalize().strip()
+        try:
+            standard = int(input(f"Enter class (11 or 12 only): {Y}"))
             print(W, end="")
 
-            if day == "End":
-                if len(dayList) < 1:
-                    print(f"{LB}Choose at least one day for the batch{W}\n")
-                else:
-                    break
+            if standard in [11, 12]:
+                break
             else:
-                if day in ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]:
-                    if day in dayList:
-                        dayList.remove(day)
-                        print(f"{LB}{day}{W} removed")
-                    else:
-                        dayList.append(day)
-                        print(f"{LB}{day}{W} added")
-                else:
-                    print(f"{W}{day} does not exist")
+                print(f"{W}Out of range\n")
+        except ValueError:
+            print(f"{W}Invalid Input\n")
+        except EOFError:
+            print(f"{W}Invalid Input\n")
+    standard = str(standard)
 
-        # Timing
-        print("\n----------------------------------------\n")
+    cur.execute(f"SELECT Class_ID FROM Class WHERE Class_Name = \"Class {standard}\";")
+    classID = cur.fetchall()[0][0]
 
-        print(f"{BL}{B}Timing{N}")
-        print(f"{Y}  Rules{LY}")
-        print(f"    Use 24-hour clock system")
-        print(f"    Format: ___ ___ ___ ___ ({I}{U}{LY} Hrs {N} {I}{U}{LY} Hrs {N} {I}{U}{LY} Min {N} {I}{U}{LY} Min {N}{LY}){N}\n")
+    # Batch Name
+    batchName = input(f"Enter the batch name: {Y}").upper()
+    print(W, end="")
 
-        i = 0
+    print("\n----------------------------------------\n")
 
-        # Seperate function ot handle time inputs
-        def isTimeValid(time:str):
-            try:
-                int(time)
-                if len(time) != 4:
-                    return f"{R}Invalid Time Format: Should be 4 characters, all being digits in HHMM format{N}"
-                else:
-                    if time[0] == "-":
-                        return f"{R}Invalid Character Found: Time cannot be negative{N}"
-                    if int(time[:2]) >= 0 and int(time[:2]) <= 23:
-                        if int(time[2:]) >= 0 and int(time[2:]) <= 59:
-                            return True
-                        else:
-                            return f"{R}Invalid Time Format: Minute should be either 0 or an integer between 1 and 59, written with a preceding \"0\" if single digit{N}"
-                    else:
-                        return f"{R}Invalid Time Format: Hour should be either 0 or an integer from 1 to 23, written with a preceding \"0\" if single digit{N}"
-            except ValueError:
-                return f"{R}Invalid Character Found{N}"
+    print(f"{BL}{B}Day Selection{N}")
+    print("  Sunday")
+    print("  Monday")
+    print("  Tueday")
+    print("  Wednesday")
+    print("  Thursday")
+    print("  Friday")
+    print("  Saturday\n")
 
-        def addTime(time1:str, time2:str):
-            minList = [int(time1[2:]), int(time2[2:])]
+    print("Enter the day of the week to select (or deselect) it\n")
 
-            hrs = int(time1[:2]) + int(time2[:2])
-            min = sum(minList)
+    dayList = []
+    i = 0
+    while True:
+        day = input(f"Select a day of the week (Type 'END' to end): {Y}").capitalize().strip()
+        print(W, end="")
 
-            if min >= 60:
-                hrs += 1
-            
-            hrs = str(hrs)
-            min = str(min)
-
-            if len(min) == 1:
-                min = "0"+min            
-
-            if len(hrs) == 1:
-                hrs = "0"+hrs            
-
-            return hrs + min
-
-        dayTimeData = ask(f"SELECT Batch_ID, Name, Time, Duration FROM Batch NATURAL JOIN Batch_Schedule WHERE Day = '{dayList[i]}' ORDER BY Time;")
-
-        if len(dayTimeData) > 0:
-            i = 0
-            while i in range (len(dayList)):
-                print(f"  {Y}{dayList[i]}{W}")
-
-                # Time definition
-                while True:
-                    time = input(f"    Time: {Y}")
-                    print(N, end="")
-                    verifiedTime = isTimeValid(time)
-
-                    if verifiedTime == True:
-                        for j in dayTimeData:
-                            if int(time) in range(int(j[2]), int(addTime(j[2], j[3]))):
-                                isSlotOccupied = True
-                                break
-
-                        if isSlotOccupied == False:
-                            break
-                        else:
-                            print(f"      {R}Conflict Detected{W}")
-                            print(f"      -----------------{LY}")
-                            print(f"\t{int(j[2][:2])}:{j[2][2:]}{W} to {LY}{int(addTime(j[2], j[3])[:2])}:{addTime(j[2], j[3])[2:]}{W} ::: {LY}{j[1]}{W} (ID: {LY}{j[0]}{W})")
-                            print(f"      -----------------")
-                            print()
-                            isSlotOccupied = False
-                    else:
-                        print("\t", verifiedTime, sep="")
-                
-                # --------------------------------------------------
-    
-                # Duration definition
-                while True:
-                    duration = input(f"    Duration: {Y}")
-                    print(N, end="")
-                    verifiedDuration = isTimeValid(duration)
-
-                    if verifiedDuration == True:
-                        for j in dayTimeData:
-                            if int(addTime(time, duration)) in range(int(j[2])+1, int(addTime(j[2], j[3]))):
-                                isSlotOccupied = True
-                                break
-
-                        if isSlotOccupied == False:
-                            break
-                        else:
-                            print(f"      {R}Conflict Detected{W}")
-                            print(f"      -----------------{LY}")
-                            print(f"\t{int(j[2][:2])}:{j[2][2:]}{W} to {LY}{int(addTime(j[2], j[3])[:2])}:{addTime(j[2], j[3])[2:]}{W} ::: {LY}{j[1]}{W} (ID: {LY}{j[0]}{W})")
-                            print(f"      -----------------")
-                            print()
-                            isSlotOccupied = False
-                    else:
-                        print("\t", verifiedDuration, sep="")
-
-                dayTimeList.append((dayList[i], time, duration))
-                i += 1
+        if day == "End":
+            if len(dayList) < 1:
+                print(f"{LB}Choose at least one day for the batch{W}\n")
+            else:
+                break
         else:
-            i = 0
-            while i in range (len(dayList)):
-                print(f"  {Y}{dayList[i]}{W}")
+            if day in ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]:
+                if day in dayList:
+                    dayList.remove(day)
+                    print(f"{LB}{day}{W} removed")
+                else:
+                    dayList.append(day)
+                    print(f"{LB}{day}{W} added")
+            else:
+                print(f"{W}{day} does not exist")
 
-                while True:
-                    time = input(f"    Time: {Y}")
-                    print(N, end="")
-                    verifiedTime = isTimeValid(time)
+    # Timing
+    print("\n----------------------------------------\n")
 
-                    if verifiedTime == True:
-                        break
-                    else:
-                        print("\t", verifiedTime, sep="")
-                
-                while True:
-                    duration = input(f"    Duration: {Y}")
-                    print(N, end="")
-                    verifiedDuration = isTimeValid(duration)
+    print(f"{BL}{B}Timing{N}")
+    print(f"{Y}  Rules{LY}")
+    print(f"    Use 24-hour clock system")
+    print(f"    Format: ___ ___ ___ ___ ({I}{U}{LY} Hrs {N} {I}{U}{LY} Hrs {N} {I}{U}{LY} Min {N} {I}{U}{LY} Min {N}{LY}){N}\n")
 
-                    if verifiedDuration == True:
-                        break
-                    else:
-                        print("\t", verifiedDuration, sep="")
-                
-                dayTimeList.append((dayList[i], time, duration))
-                i += 1
+    i = 0
 
+    # Seperate function ot handle time inputs
+    def isTimeValid(time:str):
         try:
-            cur.execute(f"INSERT INTO Batch (Batch_ID, Class_ID, Name) VALUES ('{batchID}', '{classID}', '{batchName}')")
+            int(time)
+            if len(time) != 4:
+                return f"{R}Invalid Time Format: Should be 4 characters, all being digits in HHMM format{N}"
+            else:
+                if time[0] == "-":
+                    return f"{R}Invalid Character Found: Time cannot be negative{N}"
+                if int(time[:2]) >= 0 and int(time[:2]) <= 23:
+                    if int(time[2:]) >= 0 and int(time[2:]) <= 59:
+                        return True
+                    else:
+                        return f"{R}Invalid Time Format: Minute should be either 0 or an integer between 1 and 59, written with a preceding \"0\" if single digit{N}"
+                else:
+                    return f"{R}Invalid Time Format: Hour should be either 0 or an integer from 1 to 23, written with a preceding \"0\" if single digit{N}"
+        except ValueError:
+            return f"{R}Invalid Character Found{N}"
 
-            for i in dayTimeList:
-                cur.execute(f"INSERT INTO Batch_Schedule (Batch_ID, Day, Time, Duration) VALUES ('{batchID}', '{i[0]}', '{i[1]}', '{i[2]}')")
+    def addTime(time1:str, time2:str):
+        minList = [int(time1[2:]), int(time2[2:])]
 
-            db.commit()
-            db.close()
-            print("\nDate population successful")
-            break
-        except Exception as e:
-            print("\nAn error occured:", e)
-            print("Please try again\n")
-            input("Hit ENTER to continue... ")
-            __import__('os').system('cls')
+        hrs = int(time1[:2]) + int(time2[:2])
+        min = sum(minList)
+
+        if min >= 60:
+            hrs += 1
+        
+        hrs = str(hrs)
+        min = str(min)
+
+        if len(min) == 1:
+            min = "0"+min            
+
+        if len(hrs) == 1:
+            hrs = "0"+hrs            
+
+        return hrs + min
+
+    dayTimeData = ask(f"SELECT Batch_ID, Name, Time, Duration FROM Batch NATURAL JOIN Batch_Schedule WHERE Day = '{dayList[i]}' ORDER BY Time;")
+
+    if len(dayTimeData) > 0:
+        i = 0
+        while i in range (len(dayList)):
+            print(f"  {Y}{dayList[i]}{W}")
+
+            # Time definition
+            while True:
+                time = input(f"    Time: {Y}")
+                print(N, end="")
+                verifiedTime = isTimeValid(time)
+
+                if verifiedTime == True:
+                    for j in dayTimeData:
+                        if int(time) in range(int(j[2]), int(addTime(j[2], j[3]))):
+                            isSlotOccupied = True
+                            break
+
+                    if isSlotOccupied == False:
+                        break
+                    else:
+                        print(f"      {R}Conflict Detected{W}")
+                        print(f"      -----------------{LY}")
+                        print(f"\t{int(j[2][:2])}:{j[2][2:]}{W} to {LY}{int(addTime(j[2], j[3])[:2])}:{addTime(j[2], j[3])[2:]}{W} ::: {LY}{j[1]}{W} (ID: {LY}{j[0]}{W})")
+                        print(f"      -----------------")
+                        print()
+                        isSlotOccupied = False
+                else:
+                    print("\t", verifiedTime, sep="")
+            
+            # --------------------------------------------------
+
+            # Duration definition
+            while True:
+                duration = input(f"    Duration: {Y}")
+                print(N, end="")
+                verifiedDuration = isTimeValid(duration)
+
+                if verifiedDuration == True:
+                    for j in dayTimeData:
+                        if int(addTime(time, duration)) in range(int(j[2])+1, int(addTime(j[2], j[3]))):
+                            isSlotOccupied = True
+                            break
+
+                    if isSlotOccupied == False:
+                        break
+                    else:
+                        print(f"      {R}Conflict Detected{W}")
+                        print(f"      -----------------{LY}")
+                        print(f"\t{int(j[2][:2])}:{j[2][2:]}{W} to {LY}{int(addTime(j[2], j[3])[:2])}:{addTime(j[2], j[3])[2:]}{W} ::: {LY}{j[1]}{W} (ID: {LY}{j[0]}{W})")
+                        print(f"      -----------------")
+                        print()
+                        isSlotOccupied = False
+                else:
+                    print("\t", verifiedDuration, sep="")
+
+            dayTimeList.append((dayList[i], time, duration))
+            i += 1
+    else:
+        i = 0
+        while i in range (len(dayList)):
+            print(f"  {Y}{dayList[i]}{W}")
+
+            while True:
+                time = input(f"    Time: {Y}")
+                print(N, end="")
+                verifiedTime = isTimeValid(time)
+
+                if verifiedTime == True:
+                    break
+                else:
+                    print("\t", verifiedTime, sep="")
+            
+            while True:
+                duration = input(f"    Duration: {Y}")
+                print(N, end="")
+                verifiedDuration = isTimeValid(duration)
+
+                if verifiedDuration == True:
+                    break
+                else:
+                    print("\t", verifiedDuration, sep="")
+            
+            dayTimeList.append((dayList[i], time, duration))
+            i += 1
+
+    try:
+        cur.execute(f"INSERT INTO Batch (Batch_ID, Class_ID, Name) VALUES ('{batchID}', '{classID}', '{batchName}')")
+
+        for i in dayTimeList:
+            cur.execute(f"INSERT INTO Batch_Schedule (Batch_ID, Day, Time, Duration) VALUES ('{batchID}', '{i[0]}', '{i[1]}', '{i[2]}')")
+
+        db.commit()
+        db.close()
+        print("\nDate population successful")
+    except Exception as e:
+        print("\nAn error occured:", e)
+        print("Please try again\n")
+        input("Hit ENTER to continue... ")
+        __import__('os').system('cls')
+        addNewBatch()
 
 
 # New Student
@@ -401,6 +400,7 @@ def addNewStudent():
         print("Please try again\n")
         input("Hit ENTER to continue... ")
         __import__('os').system('cls')
+        addNewStudent()
 
 
 # Log new session
@@ -476,6 +476,8 @@ def logSession():
                     print(f"{R}Can't log future sessions{W}")
                 else:
                     print(f"{R}Can't log a session after 7 days of conducting it{W}")
+            else:
+                print(verifiedLogDate)
 
     sessionNum = str(len(ask(f"SELECT * FROM Session WHERE Batch_ID = '{batchID}'")) + 1)
 
@@ -497,4 +499,88 @@ def logSession():
         print("Please try again\n")
         input("Hit ENTER to continue... ")
         __import__('os').system('cls')
+        logSession()
+
+
+# Issue new Test
+def issueNewTest():
+    db = sqlite3.connect("tuition.db")
+    cur = db.cursor()
+
+    while True:
+        try:
+            standard = int(input(f"Enter class (11 or 12 only): {Y}"))
+            print(W, end="")
+
+            if standard in [11, 12]:
+                break
+            else:
+                print(f"{W}Out of range\n")
+        except ValueError:
+            print(f"{W}Invalid Input\n")
+        except EOFError:
+            print(f"{W}Invalid Input\n")
+    standard = str(standard)
+
+
+    classID = ask(f"SELECT Class_ID FROM Class WHERE Class_Name = 'Class {standard}';")[0][0]
+    testNum = str(len(ask(f"SELECT * FROM Test_Detail WHERE Class_ID = '{classID}';")) + 1)
+
+    if len(testNum) == 1:
+        testNum = "0" + testNum
+    
+    testID = f"{classID}-TST-{testNum}"
+
+    testName = input(f"Enter the name of the test: {Y}")
+    print(W, end="")
+
+    print("\n----------------------------------------\n")
+
+    print(f"{BL}{B}Date Selection:{N}")
+    print(f"  Enter {LY}TODAY{N} to select today's date")
+    print(f"  Enter any particular date in {LY}DD-MM-YYYY{N} format to select that date\n")
+    
+    while True:
+        testDate = input(f"    Enter your choice from the above list: {Y}").lower()
+        print(W, end="")
+        
+        if testDate == "today":
+            testDate = str(date.today())
+            break
+        else:
+            verifiedTestDate = isDateValid(testDate)
+            
+            if verifiedTestDate == True:
+                break
+            else:
+                print(verifiedTestDate)
+    
+    print("\n----------------------------------------\n")
+
+    while True:
+        try:
+            fullMarks = int(input(f"Enter full marks for the test: {Y}"))
+            print(W, end="")
+            
+            if fullMarks <= 0:
+                print(f"  {R}Full Marks cannot be less than or equal to zero{W}")
+            else:
+                break
+        except ValueError:
+            print(f"  {R}Invalid Input{W}")
+        except EOFError:
+            print(f"  {R}Invalid Input{W}")
+
+    try:
+        cur.execute(f"INSERT INTO Test_Detail VALUES ('{testID}', '{classID}', '{testName}', '{testDate}', '{fullMarks}')")
+        db.commit()
+        db.close()
+        print("\nDate population successful")
+    except Exception as e:
+        print("\nAn error occured:", e)
+        print("Please try again\n")
+        input("Hit ENTER to continue... ")
+        __import__('os').system('cls')
+        issueNewTest()
+
 
