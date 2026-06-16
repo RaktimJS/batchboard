@@ -2,7 +2,8 @@
 Contains several functions that can be called whenever and wherever needed
 """
 
-import sqlite3, time
+import sqlite3
+from datetime import date, timedelta, datetime
 from tabulate import tabulate
 
 
@@ -51,7 +52,7 @@ def drawTable(query: str, db: str = "tuition.db"):
 
         headers = [column[0] for column in cursor.description]
 
-        return tabulate(rows, headers=headers, tablefmt="psql")
+        return tabulate(rows, headers=headers, tablefmt="pretty")
     except sqlite3.Error as e:
         print(f"Error: {e}")
         return None
@@ -61,67 +62,17 @@ def drawTable(query: str, db: str = "tuition.db"):
 
 # Functions for handling dates
 def isDateValid(dateStr: str):
-    dateComponent = dateStr.strip().split("-")
-
-    monthLengthMap = {
-        1: 31, 2: 28, 3: 31,
-        4: 30, 5: 31, 6: 30,
-        7: 31, 8: 31, 9: 30,
-        10: 31, 11: 30, 12: 31
-    }
-
-    months = [
-        "January", "February", "March", "April",
-        "May", "June", "July", "August",
-        "September", "October", "November", "December"
-    ]
-
-    if (
-            len(dateComponent) != 3
-            and len(dateStr) != 10
-            and len(dateStr.replace("-", "")) == 8
-            and not dateStr.replace("-", "").isnumeric()
-            and dateStr[2] != "-"
-            and dateStr[5] != "-"
-        ):
-        return f"{R}Invalid format: Date should be in {LY}DD-MM-YYYY{R} format{W}"
-    else:
-        i = 0
-        while i in range(len(dateComponent)):
-            dateComponent[i] = int(dateComponent[i])
-            i += 1
-
-        if dateComponent[2] not in range(2020, 2101):
-            return f"{R}Invalid year component: Year should be an integer between 2020 and 2100 (Both included){W}"
-        else:
-            if dateComponent[1] not in range(1, 13):
-                return f"{R}Invalid month component: Month should be an integer from 1 to 12{W}"
-            else:
-                if dateComponent[0] == 29 and dateComponent[1] == 2 and dateComponent[2] % 4 == 0:
-                    return True
-                elif dateComponent[0] > monthLengthMap[dateComponent[1]] and dateComponent[1] == 2:
-                    return f"{R}Invalid day component: {months[dateComponent[1] - 1]} {dateComponent[2]} has {monthLengthMap[dateComponent[1]]} days{W}"
-                elif dateComponent[0] > monthLengthMap[dateComponent[1]] and dateComponent[1] != 2:
-                    return f"{R}Invalid day component: {months[dateComponent[1] - 1]} has {monthLengthMap[dateComponent[1]]} days{W}"
-                else:
-                    return True
+    try:
+        datetime.strptime(dateStr, "%d-%m-%Y")
+        return True
+    except ValueError:
+        return f"{R}Invalid Date\nPlease check format: DD-MM-YYYY\nCheck for leap years and validate the number of days in each month{N}"
 
 def fixDateFormat(dateStr: str):
     dateComp = dateStr.split("-")
     return f"{dateComp[2]}-{dateComp[1]}-{dateComp[0]}"
 
-def getTodayDate():
-    year = str(tuple(time.localtime())[0])
-    month = str(tuple(time.localtime())[1])
-    day = str(tuple(time.localtime())[2])
 
-    if len(month) == 1:
-        month = "0" + month
-
-    if len(day) == 1:
-        day = "0" + day
-
-    return f"{year}-{month}-{day}"
 
 
 """
@@ -144,8 +95,8 @@ def addNewBatch():
         if len(batchNum) == 1:
             batchNum = "0" + batchNum
 
-        b_id = "BAT-" + batchNum
-        print(f"Batch ID: {Y}{b_id}{N}")
+        batchID = "BAT-" + batchNum
+        print(f"Batch ID: {Y}{batchID}{N}")
 
 
         # Fetching Class ID
@@ -165,10 +116,10 @@ def addNewBatch():
         standard = str(standard)
 
         cur.execute(f"SELECT Class_ID FROM Class WHERE Class_Name = \"Class {standard}\";")
-        c_id = cur.fetchall()[0][0]
+        classID = cur.fetchall()[0][0]
 
         # Batch Name
-        b_name = input(f"Enter the batch name: {Y}")
+        batchName = input(f"Enter the batch name: {Y}")
         print(W, end="")
 
         print("\n----------------------------------------\n")
@@ -343,10 +294,10 @@ def addNewBatch():
                 i += 1
 
         try:
-            cur.execute(f"INSERT INTO Batch (Batch_ID, Class_ID, Name) VALUES ('{b_id}', '{c_id}', '{b_name}')")
+            cur.execute(f"INSERT INTO Batch (Batch_ID, Class_ID, Name) VALUES ('{batchID}', '{classID}', '{batchName}')")
 
             for i in dayTimeList:
-                cur.execute(f"INSERT INTO Batch_Schedule (Batch_ID, Day, Time, Duration) VALUES ('{b_id}', '{i[0]}', '{i[1]}', '{i[2]}')")
+                cur.execute(f"INSERT INTO Batch_Schedule (Batch_ID, Day, Time, Duration) VALUES ('{batchID}', '{i[0]}', '{i[1]}', '{i[2]}')")
 
             db.commit()
             db.close()
@@ -420,7 +371,7 @@ def addNewStudent():
             print(f"\tBatch with ID {Y}{batchID}{W} not available in Class 12")
 
     # Generating student ID
-    studNum = str(len(ask(f"SELECT * FROM Student;")) + 1)
+    studNum = str(len(ask(f"SELECT * FROM Student WHERE Batch_ID = '{batchID}';")) + 1)
     studID = batchID + "-STU-0" + studNum if len(studNum) == 1 else batchID + "-STU-" + studNum
 
     print("\n----------------------------------------\n")
@@ -431,7 +382,7 @@ def addNewStudent():
         print(W, end="")
 
         if joinDate.lower() == "today":
-            joinDate = getTodayDate()
+            joinDate = str(date.today())
             break
         else:
             if isDateValid(joinDate) == True:
@@ -450,3 +401,100 @@ def addNewStudent():
         print("Please try again\n")
         input("Hit ENTER to continue... ")
         __import__('os').system('cls')
+
+
+# Log new session
+def logSession():
+    print(f"{B}{BL}Batch Selection{N}")
+
+    grade11Batches = ask("SELECT Name, Batch_ID FROM Batch where Class_ID = 'CLS-11';")
+    grade12Batches = ask("SELECT Name, Batch_ID FROM Batch where Class_ID = 'CLS-12';")
+
+    if len(grade11Batches) != 0:
+        print(f"{LY}  Batches in Class 11{N}")
+        print("   ", tabulate(grade11Batches, headers=["Name", "Batch ID"], tablefmt="pretty").replace("\n", "\n    "))
+
+        i = 0
+        while i in range(len(grade11Batches)):
+            grade11Batches[i] = grade11Batches[i][1]
+            i += 1
+    else:
+        print(f"{LY}  Batches in Class 11{N}")
+        print("    No Batches in Class 11")
+
+    print()
+
+    if len(grade12Batches) != 0:
+        print(f"{LY}  Batches in Class 12{N}")
+        print("   ", tabulate(grade12Batches, headers=["Name", "Batch ID"], tablefmt="pretty").replace("\n", "\n    "))
+
+        i = 0
+        while i in range(len(grade12Batches)):
+            grade12Batches[i] = grade12Batches[i][1]
+            i += 1
+    else:
+        print(f"{LY}  Batches in Class 12{N}")
+        print("    No Batches in Class 12")
+
+    print()
+
+    while True:
+        batchID = input(f"  Enter a batch ID from the above lists: {Y}").strip().upper()
+        print(W, end="")
+
+        if batchID in grade11Batches or batchID in grade12Batches:
+            break
+        else:
+            print(f"    {R}Invalid Batch ID: No batch with ID {LY}{batchID}{R} was found{W}")
+
+    print("\n----------------------------------------\n")
+
+    print(f"{B}{BL}Date selection:")
+    print(f"{R}  SESSIONS CAN BE LOGGED ONLY WITHIN 7 DAYS OF CONDUCTING IT{N}\n")
+
+    print(f"  Enter {LY}TODAY{N} to select today's date")
+    print(f"  Enter {LY}YESTERDAY{N} to select yesterday's date")
+    print(f"  Enter any particular date within last 7 days in {LY}DD-MM-YYYY{N} format to select that date\n")
+    
+    while True:
+        sessDate = input(f"    Enter your choice from the above list: {Y}").lower()
+        print(W, end="")
+        
+        if sessDate == "today":
+            sessDate = str(date.today())
+            break
+        elif sessDate == "yesterday":
+            sessDate = str(date.today() - timedelta(days=1))
+            break
+        else:
+            verifiedLogDate = isDateValid(sessDate)
+            
+            if verifiedLogDate == True:
+                if datetime.strptime(sessDate, "%d-%m-%Y").date() >= date.today() - timedelta(days=7) and datetime.strptime(sessDate, "%d-%m-%Y").date() <= date.today():
+                    break
+                elif datetime.strftime(sessDate) >= date.today():
+                    print(f"{R}Can't log future sessions{W}")
+                else:
+                    print(f"{R}Can't log a session after 7 days of conducting it{W}")
+
+    sessionNum = str(len(ask(f"SELECT * FROM Session WHERE Batch_ID = '{batchID}'")) + 1)
+
+    if len(sessionNum) == 1:
+        sessionNum = "0" + sessionNum
+
+    sessionID = f"{batchID}-SES-{sessionNum}"
+
+    db = sqlite3.connect("tuition.db")
+    cur = db.cursor()
+
+    try:
+        cur.execute(f"INSERT INTO Session VALUES ('{sessionID}', '{batchID}', '{sessDate}')")
+        db.commit()
+        db.close()
+        print("\nDate population successful")
+    except Exception as e:
+        print("\nAn error occured:", e)
+        print("Please try again\n")
+        input("Hit ENTER to continue... ")
+        __import__('os').system('cls')
+
