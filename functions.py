@@ -101,7 +101,8 @@ def addNewBatch():
     # Fetching Class ID
     while True:
         try:
-            standard = int(input(f"Enter class (11 or 12 only): {Y}"))
+            standard = input(f"Enter class (11 or 12 only): {Y}")
+            standard = int(standard)
             print(W, end="")
 
             if standard in [11, 12]:
@@ -319,7 +320,8 @@ def addNewStudent():
 
     while True:
         try:
-            standard = int(input(f"Enter class (11 or 12 only): {Y}"))
+            standard = input(f"Enter class (11 or 12 only): {Y}")
+            standard = int(standard)
             print(W, end="")
 
             if standard in [11, 12]:
@@ -509,7 +511,8 @@ def issueNewTest():
 
     while True:
         try:
-            standard = int(input(f"Enter class (11 or 12 only): {Y}"))
+            standard = input(f"Enter class (11 or 12 only): {Y}")
+            standard = int(standard)
             print(W, end="")
 
             if standard in [11, 12]:
@@ -531,7 +534,7 @@ def issueNewTest():
     
     testID = f"{classID}-TST-{testNum}"
 
-    testName = input(f"Enter the name of the test: {Y}")
+    testName = input(f"Enter the name of the test: {Y}").upper()
     print(W, end="")
 
     print("\n----------------------------------------\n")
@@ -559,7 +562,8 @@ def issueNewTest():
 
     while True:
         try:
-            fullMarks = int(input(f"Enter full marks for the test: {Y}"))
+            fullMarks = input(f"Enter full marks for the test: {Y}")
+            fullMarks = int(fullMarks)
             print(W, end="")
             
             if fullMarks <= 0:
