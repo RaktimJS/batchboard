@@ -678,3 +678,97 @@ def logTestPerformance():
         input("Hit ENTER to continue... ")
         __import__('os').system('cls')
         issueNewTest()
+
+
+# Issue new fee
+def issueNewFee():
+    while True:
+        try:
+            standard = input(f"Enter class (11 or 12 only): {Y}")
+            standard = int(standard)
+            print(W, end="")
+
+            if standard in [11, 12]:
+                break
+            else:
+                print(f"    {W}Out of range")
+        except ValueError:
+            print(f"    {W}Invalid Input")
+        except EOFError:
+            print(f"    {W}Invalid Input")
+    standard = str(standard)
+
+    print("\n----------------------------------------\n")
+
+    # Batch Selection
+    classID = "CLS-11" if standard == 11 else "CLS-12"
+    batchNameCombination = ask(f"SELECT Batch_Name, Batch_ID FROM Batch WHERE Class_ID = '{classID}'")
+    batchIDList = toList(ask(f"SELECT Batch_ID FROM Batch WHERE Class_ID = '{classID}'"))
+
+    table = "  " + tabulate(batchNameCombination, headers=["Batch Name", "ID"], tablefmt="pretty").replace("\n", "\n  ")
+
+    print(f"{BL}{B}Batch Selection{N}")
+    print(f"  Batches in Class {standard}:")
+    print(table)
+    print()
+
+    while True:
+        batchID = input(f"  Select a batch from the above list (Enter the Batch ID): {Y}").strip().upper()
+        print(W, end="")
+
+        if batchID in batchIDList:
+            break
+        else:
+            print(f"\tBatch with ID {Y}{batchID}{W} not available in Class 12")
+
+    # Generating student ID
+    feeNum = str(len(ask(f"SELECT * FROM Fee WHERE Batch_ID = '{batchID}';")) + 1)
+    feeID = batchID + "-FEE-0" + feeNum if len(feeNum) == 1 else batchID + "-FEE-" + feeNum
+
+    print("\n----------------------------------------\n")
+
+    print(f"{BL}{B}Issue Date:{N}")
+    
+    feeIssueDate = str(date.today())
+    today_date = str(date.today()).split("-")
+    today_date = f"{today_date[-1]}-{today_date[-2]}-{today_date[-3]}"
+
+    print(f"  Issue date: {Y}{today_date}{W}")
+    
+    while True:
+        todayYN = input(f"  Proceed? (Y/N): {W}")
+        
+        if todayYN.upper() in ["Y", "N"]:
+            break
+
+    if todayYN.upper() == "Y":
+        pass
+    elif todayYN.upper() == "N":
+        while True:
+            feeIssueDate = input(f"\n  Enter issue date: {Y}").upper()
+            print(W, end="")
+
+            verifiedFeeIssueDate = isDateValid(feeIssueDate, 4)
+            
+            if verifiedFeeIssueDate == True:
+                feeIssueDate = fixDateFormat(feeIssueDate)
+                break
+            else:
+                print(verifiedFeeIssueDate)
+    else:
+        print(f"    {R}Invalid Input{W}")
+
+    db = sqlite3.connect("tuition.db")
+    cur = db.cursor()
+
+    try:
+        cur.execute(f"INSERT INTO Fee VALUES ('{feeID}', '{batchID}', '{feeIssueDate}')")
+        db.commit()
+        db.close()
+        print("\nDate population successful")
+    except Exception as e:
+        print("\nAn error occured:", e)
+        print("Please try again\n")
+        input("Hit ENTER to continue... ")
+        __import__('os').system('cls')
+        issueNewTest()
