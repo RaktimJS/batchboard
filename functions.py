@@ -61,12 +61,12 @@ def drawTable(query: str, db: str = "tuition.db"):
 
 
 # Functions for handling dates
-def isDateValid(dateStr: str):
+def isDateValid(dateStr: str, indent = 0):
     try:
         datetime.strptime(dateStr, "%d-%m-%Y")
         return True
     except ValueError:
-        return f"{R}Invalid Date\nPlease check format: DD-MM-YYYY\nCheck for leap years and validate the number of days in each month{N}"
+        return f"{R}{" "*indent}Invalid Date\n{" "*indent}Please check format: DD-MM-YYYY\n{" "*indent}Check for leap years and validate the number of days in each month{N}"
 
 def fixDateFormat(dateStr: str):
     dateComp = dateStr.split("-")
@@ -98,6 +98,8 @@ def toList(iterable:list):
     Core functions
 """
 
+
+""" DATA CREATION FUNCTIONS """ 
 # New Batch Creator
 def addNewBatch():
     db = sqlite3.connect("tuition.db")
