@@ -73,6 +73,25 @@ def fixDateFormat(dateStr: str):
     return f"{dateComp[2]}-{dateComp[1]}-{dateComp[0]}"
 
 
+# Function to format ask() output
+def toList(iterable:list):
+    i = 0
+    while i in range(len(iterable)):
+        if len(iterable[i]) > 1:
+            temp = []
+            j = 0
+            while j in range(len(iterable[i])):
+                temp.append(iterable[i][j])
+                j += 1
+            iterable[i] = temp
+            i += 1
+        else:
+            iterable[i] = iterable[i][0]
+            i += 1
+
+    return iterable
+
+
 
 
 """
@@ -352,8 +371,8 @@ def addNewStudent():
 
     # Batch Selection
     classID = "CLS-11" if standard == 11 else "CLS-12"
-    batchNameCombination = ask(f"SELECT Name, Batch_ID FROM Batch WHERE Class_ID = '{classID}'")
-    batchIDList = ask(f"SELECT Batch_ID FROM Batch WHERE Class_ID = '{classID}'")[0]
+    batchNameCombination = ask(f"SELECT Batch_Name, Batch_ID FROM Batch WHERE Class_ID = '{classID}'")
+    batchIDList = toList(ask(f"SELECT Batch_ID FROM Batch WHERE Class_ID = '{classID}'"))
 
     table = "  " + tabulate(batchNameCombination, headers=["Batch Name", "ID"], tablefmt="pretty").replace("\n", "\n  ")
 
