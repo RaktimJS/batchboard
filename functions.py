@@ -697,36 +697,10 @@ def issueNewFee():
         except EOFError:
             print(f"    {W}Invalid Input")
     standard = str(standard)
-
+    
     print("\n----------------------------------------\n")
 
-    # Batch Selection
-    classID = "CLS-11" if standard == 11 else "CLS-12"
-    batchNameCombination = ask(f"SELECT Batch_Name, Batch_ID FROM Batch WHERE Class_ID = '{classID}'")
-    batchIDList = toList(ask(f"SELECT Batch_ID FROM Batch WHERE Class_ID = '{classID}'"))
-
-    table = "  " + tabulate(batchNameCombination, headers=["Batch Name", "ID"], tablefmt="pretty").replace("\n", "\n  ")
-
-    print(f"{BL}{B}Batch Selection{N}")
-    print(f"  Batches in Class {standard}:")
-    print(table)
-    print()
-
-    while True:
-        batchID = input(f"  Select a batch from the above list (Enter the Batch ID): {Y}").strip().upper()
-        print(W, end="")
-
-        if batchID in batchIDList:
-            break
-        else:
-            print(f"\tBatch with ID {Y}{batchID}{W} not available in Class 12")
-
-    # Generating student ID
-    feeNum = str(len(ask(f"SELECT * FROM Fee WHERE Batch_ID = '{batchID}';")) + 1)
-    feeID = batchID + "-FEE-0" + feeNum if len(feeNum) == 1 else batchID + "-FEE-" + feeNum
-
-    print("\n----------------------------------------\n")
-
+    # Issue Date
     print(f"{BL}{B}Issue Date:{N}")
     
     feeIssueDate = str(date.today())
@@ -758,17 +732,222 @@ def issueNewFee():
     else:
         print(f"    {R}Invalid Input{W}")
 
-    db = sqlite3.connect("tuition.db")
-    cur = db.cursor()
+    print("\n----------------------------------------\n")
 
-    try:
-        cur.execute(f"INSERT INTO Fee VALUES ('{feeID}', '{batchID}', '{feeIssueDate}')")
-        db.commit()
-        db.close()
-        print("\nDate population successful")
-    except Exception as e:
-        print("\nAn error occured:", e)
-        print("Please try again\n")
-        input("Hit ENTER to continue... ")
-        __import__('os').system('cls')
-        issueNewTest()
+    # Fee name
+    print(f"{B}{BL}Fee Description{N}")
+    print(f"  {Y}Options{N}")
+    print(f"    Enter {Y}1{W} for {LY}Monthly Fee{W}")
+    print(f"    Enter {Y}2{W} for {LY}Revision Class Fee{W}")
+    print(f"    Enter {Y}3{W} for {LY}Additional Class Fee{W}")
+    print(f"    Enter {Y}4{W} for {LY}Other... (Enter manually){W}\n")
+
+    while True:
+        try:
+            feeNameChoice = input(f"    Choose from the above list: {Y}")
+            print(W, end="")
+            feeNameChoice = int(feeNameChoice)
+
+            if feeNameChoice < 0 or feeNameChoice > 4:
+                print(f"      {R}Out of range input{W}")
+            else:
+                if feeNameChoice == 1:
+                    feeName = "Monthly Fee"
+                elif feeNameChoice == 2:
+                    feeName = "Revision Class Fee"
+                elif feeNameChoice == 3:
+                    feeName = "Additional Class Fee"
+                else:
+                    feeName = input(f"      Enter a short fee description: {Y}")
+                    print(W, end="")
+                
+                break
+        except ValueError:
+            print(f"      {R}Invalid input{W}")
+        except EOFError:
+            print(f"      {R}Invalid input{W}")
+
+    print("\n----------------------------------------\n")
+
+    # Student Selection by batch
+    classID = "CLS-11" if standard == 11 else "CLS-12"
+    batchNameCombination = ask(f"SELECT Batch_Name, Batch_ID FROM Batch WHERE Class_ID = '{classID}'")
+    batchIDList = toList(ask(f"SELECT Batch_ID FROM Batch WHERE Class_ID = '{classID}'"))
+
+    table = "    " + tabulate(batchNameCombination, headers=["Batch Name", "ID"], tablefmt="pretty").replace("\n", "\n    ")
+
+    print(f"{BL}{B}Batch Selection{N}")
+    print(f"  Batches in Class {standard}:")
+    print(table)
+    print()
+
+    while True:
+        batchID = input(f"  Select a batch from the above list (Enter the Batch ID): {Y}").strip().upper()
+        print(W, end="")
+
+        if batchID in batchIDList:
+            break
+        else:
+            print(f"\tBatch with ID {Y}{batchID}{W} not available in Class 12")
+
+    # Generating student ID
+    feeNum = str(len(ask(f"SELECT DISTINCT Fee_ID FROM Fee NATURAL JOIN Fee_Assignment NATURAL JOIN Student WHERE Batch_ID = '{batchID}';")) + 1)
+    feeID = batchID + "-FEE-0" + feeNum if len(feeNum) == 1 else batchID + "-FEE-" + feeNum
+
+    print("\n----------------------------------------\n")
+
+    # Assign fee to
+    print(f"{BL}{B}Fee assignment options{N}")
+    print()
+    print(f"  Enter {Y}1{W} to assign fee to all students")
+    print(f"  Enter {Y}2{W} to assign fee to all students except selected students")
+    print(f"  Enter {Y}3{W} to assign fee to only selected students\n")
+
+    while True:
+        try:
+            choice = input(f"  Choice: {Y}")
+            print(W, end="")
+            choice = int(choice)
+
+            if choice < 0 or choice > 3:
+                print(f"    {R}Out of range input{W}")
+            else:
+                break
+        except ValueError:
+            print(f"    {R}Invalid input{W}")
+        except EOFError:
+            print(f"    {R}Invalid input{W}")
+
+    if choice == 1:
+        studIDList = toList(ask(f"SELECT Stud_ID FROM Student WHERE Batch_ID = '{batchID}'"))
+        try:
+            db = sqlite3.connect("tuition.db")
+            cur = db.cursor()
+            cur.execute(f"INSERT INTO Fee VALUES ('{feeID}', '{feeIssueDate}', '{feeName}')")
+
+            for i in studIDList:
+                cur.execute(f"INSERT INTO Fee_Assignment VALUES ('{feeID}', '{i}')")
+
+            db.commit()
+            db.close()
+            print()
+            print("\nDate population successful")
+        except Exception as e:
+            print("\nAn error occured:", e)
+            print("Please try again\n")
+            input("Hit ENTER to continue... ")
+            __import__('os').system('cls')
+            issueNewTest()
+    elif choice == 2:
+        studIDNameCombination = ask(f"SELECT Stud_ID, Stud_Name FROM Student WHERE Batch_ID = '{batchID}'")
+        studIDList = toList(ask(f"SELECT Stud_ID FROM Student WHERE Batch_ID = '{batchID}'"))
+
+        try:
+            print("   ", tabulate(studIDNameCombination, headers=["ID", "Name"], tablefmt="pretty").replace("\n", "\n    "))
+            print()
+
+            excludedIDList = []
+
+            print(f"{Y}  Rules{LY}")
+            print(f"    Enter an ID to put it into exclusion list")
+            print(f"    Re-enter the ID to remove it from the exclusion list")
+            print(f"    Enter {Y}END{LY} to quit entering IDs further{Y}\n")
+            print(f"    NOTE: If exclusion list is empty, then the fee will be issued to all students{W}\n")
+
+            while True:
+                excludedID = input(f"  Enter ID to exclude (Enter {Y}'END'{W} to quit): {Y}").strip().upper()
+                print(W, end="")
+
+                if excludedID == "END":
+                    break
+                else:
+                    if excludedID in studIDList and excludedID not in excludedIDList:
+                        excludedIDList.append(excludedID)
+                        print(f"    {LB}Student with ID {excludedID} exluded{W}")
+                    elif excludedID in studIDList and excludedID in excludedIDList:
+                        excludedIDList.remove(excludedID)
+                        print(f"    {LB}Student with ID {excludedID} removed from exlusion list{W}")
+                    else:
+                        print(f"    {LB}Student with ID {excludedID} does not exist{W}")
+
+            db = sqlite3.connect("tuition.db")
+            cur = db.cursor()
+            cur.execute(f"INSERT INTO Fee VALUES ('{feeID}', '{feeIssueDate}', '{feeName}')")
+
+            for i in studIDList:
+                if i not in excludedIDList:
+                    cur.execute(f"INSERT INTO Fee_Assignment VALUES ('{feeID}', '{i}')")
+
+            db.commit()
+            db.close()
+            print()
+            print("\nDate population successful")
+        except Exception as e:
+            print("\nAn error occured:", e)
+            print("Please try again\n")
+            input("Hit ENTER to continue... ")
+            __import__('os').system('cls')
+            issueNewTest()
+    else:
+        studIDNameCombination = ask(f"SELECT Stud_ID, Stud_Name FROM Student WHERE Batch_ID = '{batchID}'")
+        studIDList = toList(ask(f"SELECT Stud_ID FROM Student WHERE Batch_ID = '{batchID}'"))
+
+        try:
+            print("   ", tabulate(studIDNameCombination, headers=["ID", "Name"], tablefmt="pretty").replace("\n", "\n    "))
+            print()
+
+            selectedIDList = []
+
+            print(f"{Y}  Rules{LY}")
+            print(f"    Enter an ID to put it into selectionion list")
+            print(f"    Re-enter the ID to remove it from the selectionion list")
+            print(f"    Enter {Y}END{LY} to quit entering IDs further{Y}\n")
+            print(f"    NOTE: Selection list cannot be empty{W}\n")
+
+            while True:
+                selectedID = input(f"  Enter ID to select (Enter {Y}'END'{W} to quit): {Y}").strip().upper()
+                print(W, end="")
+
+                if selectedID == "END":
+                    if len(selectedIDList) >= 1:
+                        break
+                    else:
+                        print(f"    {LB}Selection list cannot be empty. Please select at least one student")
+                else:
+                    if selectedID in studIDList and selectedID not in selectedIDList:
+                        selectedIDList.append(selectedID)
+                        print(f"    {LB}Student with ID {selectedID} selected{W}")
+                    elif selectedID in studIDList and selectedID in selectedIDList:
+                        selectedIDList.remove(selectedID)
+                        print(f"    {LB}Student with ID {selectedID} removed from selection list{W}")
+                    else:
+                        print(f"    {LB}Student with ID {selectedID} does not exist{W}")
+
+            db = sqlite3.connect("tuition.db")
+            cur = db.cursor()
+            cur.execute(f"INSERT INTO Fee VALUES ('{feeID}', '{feeIssueDate}', '{feeName}')")
+            
+            for i in selectedIDList:
+                cur.execute(f"INSERT INTO Fee_Assignment VALUES ('{feeID}', '{i}')")
+
+            db.commit()
+            db.close()
+            print("\nDate population successful")
+        except Exception as e:
+            print("\nAn error occured:", e)
+            print("Please try again\n")
+            input("Hit ENTER to continue... ")
+            __import__('os').system('cls')
+            issueNewTest()
+
+
+__import__('os').system('cls')
+print(drawTable("select * from student;"))
+print(drawTable("select * from fee;"))
+print(drawTable("select * from fee_assignment;"))
+
+issueNewFee()
+
+print(drawTable("select * from student;"))
+print(drawTable("select * from fee;"))
+print(drawTable("select * from fee_assignment;"))
