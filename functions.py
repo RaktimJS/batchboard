@@ -941,3 +941,4 @@ def issueNewFee():
             issueNewTest()
 
 
+# Log payments
