@@ -430,8 +430,8 @@ def addNewStudent():
 def logSession():
     print(f"{B}{BL}Batch Selection{N}")
 
-    grade11Batches = ask("SELECT Name, Batch_ID FROM Batch where Class_ID = 'CLS-11';")
-    grade12Batches = ask("SELECT Name, Batch_ID FROM Batch where Class_ID = 'CLS-12';")
+    grade11Batches = ask("SELECT Batch_Name, Batch_ID FROM Batch where Class_ID = 'CLS-11';")
+    grade12Batches = ask("SELECT Batch_Name, Batch_ID FROM Batch where Class_ID = 'CLS-12';")
 
     if len(grade11Batches) != 0:
         print(f"{LY}  Batches in Class 11{N}")
@@ -943,23 +943,84 @@ def issueNewFee():
 
 # Log payments
 def logPayments():
-    # Fee ID selection
-    unloggedFeeID = toList(ask("SELECT Fee_ID FROM Fee f WHERE NOT EXISTS (SELECT 'any' FROM Payment p WHERE f.Fee_ID = p.Fee_ID );"))
-    unloggedIDNameCombination = toList(ask("""
-        SELECT
-            f.Fee_ID, f.Fee_Name,
-            COUNT(*), COUNT(*) - COUNT(p.Payment_ID)
-        FROM Fee f NATURAL JOIN Fee_Assignment fa LEFT JOIN Payment p 
-        ON  fa.Fee_ID = p.Fee_ID AND fa.Stud_ID = p.Stud_ID
-        GROUP BY
-            f.Fee_ID,
-            f.Fee_Name
-        HAVING
-            COUNT(*) - COUNT(p.Payment_ID) > 0;
-    """))
+    print(f"{BL}{B}Payee Selection{N}")
 
-    header = ["Incomplete Payments (IDs)", "Fee Description", "Students Assigned", "Students Remaining"]
+    grade11Batches = ask("SELECT Batch_Name, Batch_ID FROM Batch where Class_ID = 'CLS-11';")
+    grade12Batches = ask("SELECT Batch_Name, Batch_ID FROM Batch where Class_ID = 'CLS-12';")
 
-    print(f"{BL}{B}Fee ID Selection{N}")
-    print(" ", tabulate(unloggedIDNameCombination, headers=header, tablefmt="pretty").replace("\n", "\n  "))
-    print(f"  {R}NOTE: {Y}Fees that have not been paid by all assigned\n\tstudents are displayed in the list{W}")
+    if len(grade11Batches) != 0:
+        print(f"{LY}  Batches in Class 11{N}")
+        print("   ", tabulate(grade11Batches, headers=["Name", "Batch ID"], tablefmt="pretty").replace("\n", "\n    "))
+
+        i = 0
+        while i in range(len(grade11Batches)):
+            grade11Batches[i] = grade11Batches[i][1]
+            i += 1
+    else:
+        print(f"{LY}  Batches in Class 11{N}")
+        print("    No Batches in Class 11")
+
+    print()
+
+    if len(grade12Batches) != 0:
+        print(f"{LY}  Batches in Class 12{N}")
+        print("   ", tabulate(grade12Batches, headers=["Name", "Batch ID"], tablefmt="pretty").replace("\n", "\n    "))
+
+        i = 0
+        while i in range(len(grade12Batches)):
+            grade12Batches[i] = grade12Batches[i][1]
+            i += 1
+    else:
+        print(f"{LY}  Batches in Class 12{N}")
+        print("    No Batches in Class 12")
+
+    print()
+
+    while True:
+        batchID = input(f"  Enter a batch ID from the above lists: {Y}").strip().upper()
+        print(W, end="")
+
+        if batchID in grade11Batches or batchID in grade12Batches:
+            break
+        else:
+            print(f"    {R}Invalid Batch ID: No batch with ID {LY}{batchID}{R} was found{W}")
+
+    print("\n----------------------------------------\n")
+
+    # Payee seelction
+    print(f"{BL}{B}Payee Selection{N}")
+    studNameIDMap = ask(f"SELECT Stud_ID, Stud_Name, Phone FROM Student WHERE Batch_ID = '{batchID}'")
+    studNameList = toList(ask(f"SELECT Stud_Name FROM Student WHERE Batch_ID = '{batchID}'"))
+    print(" ", tabulate(studNameIDMap, headers=["ID", "Name", "Phone"], tablefmt="pretty").replace("\n", "\n  "))
+
+    print()
+    while True:
+        studName = input(f"  Enter student name (Refer to the table above): {Y}").title()
+        print(W, end="")
+        
+        if studName in studNameList and studNameList.count(studName) == 1:
+            studID = toList(ask(f"SELECT Stud_ID, Stud_Name, Phone FROM Student WHERE Batch_ID = '{batchID}' AND Stud_Name = '{studName}'"))[0]
+            break
+        elif studName in studNameList and studNameList.count(studName) > 1:
+            print(f"    {LB}{studNameList.count(studName)} matches found{W}\n")
+
+            studNameIDMap = ask(f"SELECT Stud_ID, Stud_Name, Phone FROM Student WHERE Batch_ID = '{batchID}' AND Stud_Name = '{studName}'")
+            print(" ", tabulate(studNameIDMap, headers=["ID", f"Name", "Phone"], tablefmt="pretty").replace("\n", "\n  "))
+
+            studIDList = toList(ask(f"SELECT Stud_ID FROM Student WHERE Batch_ID = '{batchID}'"))
+
+            print()
+            while True:
+                studID = input(f"  {W}Enter the ID: {Y}").upper()
+                print(W, end="")
+
+                if studID in studIDList:
+                    breakAll = True
+                    break
+                else:
+                    print(f"      {R}Student with ID {studID} not found{W}")
+
+            if breakAll == True:
+                break
+        else:
+            print(f"    {R}Student named {studName} not found{W}")
