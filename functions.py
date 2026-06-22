@@ -941,13 +941,3 @@ def issueNewFee():
             issueNewTest()
 
 
-__import__('os').system('cls')
-print(drawTable("select * from student;"))
-print(drawTable("select * from fee;"))
-print(drawTable("select * from fee_assignment;"))
-
-issueNewFee()
-
-print(drawTable("select * from student;"))
-print(drawTable("select * from fee;"))
-print(drawTable("select * from fee_assignment;"))
