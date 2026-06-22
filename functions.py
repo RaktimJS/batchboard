@@ -942,3 +942,24 @@ def issueNewFee():
 
 
 # Log payments
+def logPayments():
+    # Fee ID selection
+    unloggedFeeID = toList(ask("SELECT Fee_ID FROM Fee f WHERE NOT EXISTS (SELECT 'any' FROM Payment p WHERE f.Fee_ID = p.Fee_ID );"))
+    unloggedIDNameCombination = toList(ask("""
+        SELECT
+            f.Fee_ID, f.Fee_Name,
+            COUNT(*), COUNT(*) - COUNT(p.Payment_ID)
+        FROM Fee f NATURAL JOIN Fee_Assignment fa LEFT JOIN Payment p 
+        ON  fa.Fee_ID = p.Fee_ID AND fa.Stud_ID = p.Stud_ID
+        GROUP BY
+            f.Fee_ID,
+            f.Fee_Name
+        HAVING
+            COUNT(*) - COUNT(p.Payment_ID) > 0;
+    """))
+
+    header = ["Incomplete Payments (IDs)", "Fee Description", "Students Assigned", "Students Remaining"]
+
+    print(f"{BL}{B}Fee ID Selection{N}")
+    print(" ", tabulate(unloggedIDNameCombination, headers=header, tablefmt="pretty").replace("\n", "\n  "))
+    print(f"  {R}NOTE: {Y}Fees that have not been paid by all assigned\n\tstudents are displayed in the list{W}")
