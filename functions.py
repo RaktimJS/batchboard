@@ -943,75 +943,51 @@ def issueNewFee():
 
 # Log payments
 def logPayments():
-    print(f"{BL}{B}Payee Selection{N}")
-
-    grade11Batches = ask("SELECT Batch_Name, Batch_ID FROM Batch where Class_ID = 'CLS-11';")
-    grade12Batches = ask("SELECT Batch_Name, Batch_ID FROM Batch where Class_ID = 'CLS-12';")
-
-    if len(grade11Batches) != 0:
-        print(f"{LY}  Batches in Class 11{N}")
-        print("   ", tabulate(grade11Batches, headers=["Name", "Batch ID"], tablefmt="pretty").replace("\n", "\n    "))
-
-        i = 0
-        while i in range(len(grade11Batches)):
-            grade11Batches[i] = grade11Batches[i][1]
-            i += 1
-    else:
-        print(f"{LY}  Batches in Class 11{N}")
-        print("    No Batches in Class 11")
-
-    print()
-
-    if len(grade12Batches) != 0:
-        print(f"{LY}  Batches in Class 12{N}")
-        print("   ", tabulate(grade12Batches, headers=["Name", "Batch ID"], tablefmt="pretty").replace("\n", "\n    "))
-
-        i = 0
-        while i in range(len(grade12Batches)):
-            grade12Batches[i] = grade12Batches[i][1]
-            i += 1
-    else:
-        print(f"{LY}  Batches in Class 12{N}")
-        print("    No Batches in Class 12")
-
-    print()
+    # Payee seelction
+    print(f"{BL}{B}Class Selection{N}")
 
     while True:
-        batchID = input(f"  Enter a batch ID from the above lists: {Y}").strip().upper()
-        print(W, end="")
+        try:
+            standard = input(f"  Enter class (11 or 12 only): {Y}")
+            standard = int(standard)
+            print(W, end="")
 
-        if batchID in grade11Batches or batchID in grade12Batches:
-            break
-        else:
-            print(f"    {R}Invalid Batch ID: No batch with ID {LY}{batchID}{R} was found{W}")
+            if standard in [11, 12]:
+                classID = f"CLS-{standard}"
+                break
+            else:
+                print(f"{W}Out of range\n")
+        except ValueError:
+            print(f"{W}Invalid Input\n")
+        except EOFError:
+            print(f"{W}Invalid Input\n")
 
     print("\n----------------------------------------\n")
 
-    # Payee seelction
     print(f"{BL}{B}Payee Selection{N}")
-    studNameIDMap = ask(f"SELECT Stud_ID, Stud_Name, Phone FROM Student WHERE Batch_ID = '{batchID}'")
-    studNameList = toList(ask(f"SELECT Stud_Name FROM Student WHERE Batch_ID = '{batchID}'"))
+    studNameIDMap = ask(f"SELECT Stud_ID, Stud_Name, Phone FROM Student NATURAL JOIN Batch WHERE Class_ID = '{classID}'")
+    studNameList = toList(ask(f"SELECT Stud_Name FROM Student NATURAL JOIN Batch WHERE Class_ID = '{classID}'"))
     print(" ", tabulate(studNameIDMap, headers=["ID", "Name", "Phone"], tablefmt="pretty").replace("\n", "\n  "))
 
     print()
     while True:
-        studName = input(f"  Enter student name (Refer to the table above): {Y}").title()
+        studName = input(f"  Enter student name (Refer to the table above): {Y}").strip().title()
         print(W, end="")
         
         if studName in studNameList and studNameList.count(studName) == 1:
-            studID = toList(ask(f"SELECT Stud_ID, Stud_Name, Phone FROM Student WHERE Batch_ID = '{batchID}' AND Stud_Name = '{studName}'"))[0]
+            studID = toList(ask(f"SELECT Stud_ID FROM Student NATURAL JOIN Batch WHERE Class_ID = '{classID}' AND Stud_Name = '{studName}'"))[0]
             break
         elif studName in studNameList and studNameList.count(studName) > 1:
             print(f"    {LB}{studNameList.count(studName)} matches found{W}\n")
 
-            studNameIDMap = ask(f"SELECT Stud_ID, Stud_Name, Phone FROM Student WHERE Batch_ID = '{batchID}' AND Stud_Name = '{studName}'")
+            studNameIDMap = ask(f"SELECT Stud_ID, Stud_Name, Phone FROM Student NATURAL JOIN Batch WHERE Class_ID = '{classID}' AND Stud_Name = '{studName}'")
             print(" ", tabulate(studNameIDMap, headers=["ID", f"Name", "Phone"], tablefmt="pretty").replace("\n", "\n  "))
 
-            studIDList = toList(ask(f"SELECT Stud_ID FROM Student WHERE Batch_ID = '{batchID}'"))
+            studIDList = toList(ask(f"SELECT Stud_ID FROM Student"))
 
             print()
             while True:
-                studID = input(f"  {W}Enter the ID: {Y}").upper()
+                studID = input(f"  {W}Enter Student ID: {Y}").strip().upper()
                 print(W, end="")
 
                 if studID in studIDList:
@@ -1024,3 +1000,138 @@ def logPayments():
                 break
         else:
             print(f"    {R}Student named {studName} not found{W}")
+
+    dueFeesNameCombination = ask(f"""
+        SELECT fa.Fee_ID, f.Fee_Name
+        FROM Fee_Assignment fa JOIN Fee f ON fa.Fee_ID = f.Fee_ID
+        WHERE fa.Stud_ID = 'BAT-05-STU-01'
+        AND NOT EXISTS (
+            SELECT 1 FROM Payment p WHERE p.Fee_ID = fa.Fee_ID AND p.Stud_ID = fa.Stud_ID
+        );
+    """)
+
+    dueFeeIDList = toList(ask(f"""
+        SELECT fa.Fee_ID
+        FROM Fee_Assignment fa JOIN Fee f ON fa.Fee_ID = f.Fee_ID
+        WHERE fa.Stud_ID = 'BAT-05-STU-01'
+        AND NOT EXISTS (
+            SELECT 1 FROM Payment p WHERE p.Fee_ID = fa.Fee_ID AND p.Stud_ID = fa.Stud_ID
+        );
+    """))
+
+    print("\n----------------------------------------\n")
+
+    print(f"{BL}{B}Fee Selection{N}")
+
+    if len(dueFeeIDList) == 0:
+        print(f"  NO FEE DUE")
+    elif len(dueFeeIDList) == 1:
+        print(f"  {Y}Fees assigned:{W}")
+        print(" ", tabulate(dueFeesNameCombination, headers=["Fee Assigned", "Fee Description"], tablefmt="pretty").replace("\n", "\n  "))
+        print()
+
+        while True:
+            selectYN = input(f"  Select fee with ID {Y}{dueFeeIDList[0]}? (Y/N): ").strip().upper()
+            print(W, end="")
+
+            if selectYN == "Y":
+                feeID = dueFeeIDList[0]
+                break
+            elif selectYN == "N":
+                while True:
+                    selectYN = input(f"  Log fee for another student? (Y/N): ").strip().upper()
+                    print(W, end="")
+
+                    if selectYN == "Y":
+                        logPayments()
+                    elif selectYN == "N":
+                        return
+                    else:
+                        print(f"    {R}Invalid Input{W}")
+            else:
+                print(f"    {R}Invalid Input{W}")
+
+        feeID = dueFeeIDList[0]
+    else:
+        print(f"  {Y}Fees assigned:{W}")
+        print(" ", tabulate(dueFeesNameCombination, headers=["Fee Assigned", "Fee Description"], tablefmt="pretty").replace("\n", "\n  "))
+        print()
+
+        while True:
+            feeID = input(f"  Enter Fee ID: {Y}").strip().upper()
+            print(W, end="")
+
+            if feeID in dueFeeIDList:
+                break
+            else:
+                print(f"    {R}Fee ID not available{W}")
+
+    print("\n----------------------------------------\n")
+
+    print(f"{B}{BL}Date selection:{N}")
+    print(f"  Enter {LY}TODAY{N} to select today's date")
+    print(f"  Enter {LY}YESTERDAY{N} to select yesterday's date")
+    print(f"  Enter any particular date within last 7 days in {LY}DD-MM-YYYY{N} format to select that date\n")
+
+    while True:
+        feeLogDate = input(f"  Enter your choice from the above list: {Y}").lower()
+        print(W, end="")
+
+        if feeLogDate == "today":
+            feeLogDate = str(date.today())
+            break
+        elif feeLogDate == "yesterday":
+            feeLogDate = str(date.today() - timedelta(days=1))
+            break
+        else:
+            verifiedLogDate = isDateValid(feeLogDate)
+
+            if verifiedLogDate == True:
+                if datetime.strptime(feeLogDate, "%d-%m-%Y").date() >= date.today() - timedelta(days=7) and datetime.strptime(feeLogDate, "%d-%m-%Y").date() <= date.today():
+                    break
+                elif datetime.strftime(feeLogDate) >= date.today():
+                    print(f"{R}Can't log future sessions{W}")
+                else:
+                    print(f"{R}Can't log a session after 7 days of conducting it{W}")
+            else:
+                print(verifiedLogDate)
+
+    print()
+
+    canInsert = False
+    while True:
+        logYN = input(f"  Log fee with ID {feeID}? (Y/N): {Y}").strip().upper()
+        print(W, end="")
+
+        if logYN == "Y":
+            canInsert = True
+            break
+        elif logYN == "N":
+            while True:
+                logYN = input(f"  Log another fee? (Y/N): {Y}").strip().upper()
+                print(W, end="")
+
+                if logYN == "Y":
+                    logPayments()
+                elif logYN == "N":
+                    return
+                else:
+                    print(f"    {R}Invalid Input{W}")
+        else:
+            print(f"    {R}Invalid Input{W}")
+
+    if canInsert == True:
+        try:
+            db = sqlite3.connect("tuition.db")
+            cur = db.cursor()
+            cur.execute(f"INSERT INTO Payment VALUES ('{feeID}', '{studID}', '{feeLogDate}')")
+            db.commit()
+            db.close()
+            print()
+            print("\nDate population successful")
+        except Exception as e:
+            print("\nAn error occured:", e)
+            print("Please try again\n")
+            input("Hit ENTER to continue... ")
+            __import__('os').system('cls')
+            issueNewTest()
