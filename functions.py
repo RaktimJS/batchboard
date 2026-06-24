@@ -1148,3 +1148,16 @@ def logPayments():
             __import__('os').system('cls')
             logPayments()
 
+
+
+
+""" DATA READ FUNCTIONS """
+# Batch-Time pivot table
+def pivotBatchTime():
+    print(f"{BL}{B}Batch Timetable{N}")
+
+    days = [
+        "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
+    ]
+    print(" ", tabulate(ask("SELECT * FROM Batch_Time_Pivot"), headers=days, tablefmt="pretty").replace("\n", "\n  "))
+
