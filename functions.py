@@ -99,7 +99,7 @@ def toList(iterable:list):
 """
 
 
-""" DATA CREATION FUNCTIONS """ 
+""" DATA CREATION FUNCTIONS """
 # New Batch Creator
 def addNewBatch():
     db = sqlite3.connect("tuition.db")
@@ -115,76 +115,77 @@ def addNewBatch():
     if len(batchNum) == 1:
         batchNum = "0" + batchNum
 
-    batchID = "BAT-" + batchNum
-    print(f"Batch ID: {Y}{batchID}{N}")
+    print(f"{BL}{B}Batch Details{N}")
 
+    batchID = "BAT-" + batchNum
+    print(f"  Batch ID: {Y}{batchID}{N}")
 
     # Fetching Class ID
     while True:
         try:
-            standard = input(f"Enter class (11 or 12 only): {Y}")
+            standard = input(f"  Enter class (11 or 12 only): {Y}")
             standard = int(standard)
             print(W, end="")
 
             if standard in [11, 12]:
                 break
             else:
-                print(f"{W}Out of range\n")
+                print(f"    {R}Out of range\n{W}")
         except ValueError:
-            print(f"{W}Invalid Input\n")
+            print(f"    {R}Invalid Input\n{W}")
         except EOFError:
-            print(f"{W}Invalid Input\n")
+            print(f"    {R}Invalid Input\n{W}")
     standard = str(standard)
 
     cur.execute(f"SELECT Class_ID FROM Class WHERE Class_Name = \"Class {standard}\";")
     classID = cur.fetchall()[0][0]
 
     # Batch Name
-    batchName = input(f"Enter the batch name: {Y}").upper()
+    batchName = input(f"  Enter the batch name: {Y}").strip().upper()
     print(W, end="")
 
     print("\n----------------------------------------\n")
 
     print(f"{BL}{B}Day Selection{N}")
-    print("  Sunday")
-    print("  Monday")
-    print("  Tueday")
-    print("  Wednesday")
-    print("  Thursday")
-    print("  Friday")
-    print("  Saturday\n")
+    print(f"  {Y}Options{N}")
+    print("    Sunday")
+    print("    Monday")
+    print("    Tueday")
+    print("    Wednesday")
+    print("    Thursday")
+    print("    Friday")
+    print("    Saturday\n")
 
-    print("Enter the day of the week to select (or deselect) it\n")
+    print(f"  {LY}Enter the day of the week to select (or deselect) it{W}\n")
 
     dayList = []
     i = 0
     while True:
-        day = input(f"Select a day of the week (Type 'END' to end): {Y}").capitalize().strip()
+        day = input(f"  Select a day of the week (Type 'END' to end): {Y}").capitalize().strip()
         print(W, end="")
 
         if day == "End":
             if len(dayList) < 1:
-                print(f"{LB}Choose at least one day for the batch{W}\n")
+                print(f"    {LB}Choose at least one day for the batch{W}")
             else:
                 break
         else:
             if day in ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]:
                 if day in dayList:
                     dayList.remove(day)
-                    print(f"{LB}{day}{W} removed")
+                    print(f"    {LB}{day}{W} removed")
                 else:
                     dayList.append(day)
-                    print(f"{LB}{day}{W} added")
+                    print(f"    {LB}{day}{W} added")
             else:
-                print(f"{W}{day} does not exist")
+                print(f"    {W}{day} does not exist")
 
     # Timing
     print("\n----------------------------------------\n")
 
-    print(f"{BL}{B}Timing{N}")
-    print(f"{Y}  Rules{LY}")
-    print(f"    Use 24-hour clock system")
-    print(f"    Format: ___ ___ ___ ___ ({I}{U}{LY} Hrs {N} {I}{U}{LY} Hrs {N} {I}{U}{LY} Min {N} {I}{U}{LY} Min {N}{LY}){N}\n")
+    print(f"{BL}{B}Timing{N}{LY}")
+    print(f"  Use 24-hour clock system")
+    print(f"  Format: ___ ___ ___ ___ ({I}{U}{LY} Hrs {N} {I}{U}{LY} Hrs {N} {I}{U}{LY} Min {N} {I}{U}{LY} Min {N}{LY}){N}\n")
 
     i = 0
 
@@ -227,7 +228,7 @@ def addNewBatch():
 
         return hrs + min
 
-    dayTimeData = ask(f"SELECT Batch_ID, Name, Time, Duration FROM Batch NATURAL JOIN Batch_Schedule WHERE Day = '{dayList[i]}' ORDER BY Time;")
+    dayTimeData = ask(f"SELECT Batch_ID, Batch_Name, Time, Duration FROM Batch NATURAL JOIN Batch_Schedule WHERE Day = '{dayList[i]}' ORDER BY Time;")
 
     if len(dayTimeData) > 0:
         i = 0
@@ -315,7 +316,7 @@ def addNewBatch():
             i += 1
 
     try:
-        cur.execute(f"INSERT INTO Batch (Batch_ID, Class_ID, Name) VALUES ('{batchID}', '{classID}', '{batchName}')")
+        cur.execute(f"INSERT INTO Batch (Batch_ID, Class_ID, Batch_Name) VALUES ('{batchID}', '{classID}', '{batchName}')")
 
         for i in dayTimeList:
             cur.execute(f"INSERT INTO Batch_Schedule (Batch_ID, Day, Time, Duration) VALUES ('{batchID}', '{i[0]}', '{i[1]}', '{i[2]}')")
@@ -336,38 +337,40 @@ def addNewStudent():
     db = sqlite3.connect("tuition.db")
     cur = db.cursor()
     
-    name = input(f"Enter the name of the student: {Y}")
+    print(f"{BL}{B}Student Details{N}")
+
+    name = input(f"  Enter the name of the student: {Y}")
     print(W, end="")
 
     while True:
         try:
-            standard = input(f"Enter class (11 or 12 only): {Y}")
+            standard = input(f"  Enter class (11 or 12 only): {Y}")
             standard = int(standard)
             print(W, end="")
 
             if standard in [11, 12]:
                 break
             else:
-                print(f"    {W}Out of range")
+                print(f"    {R}Out of range{W}")
         except ValueError:
-            print(f"    {W}Invalid Input")
+            print(f"    {R}Invalid Input{W}")
         except EOFError:
-            print(f"    {W}Invalid Input")
+            print(f"    {R}Invalid Input{W}")
     standard = str(standard)
 
     while True:
         try:
-            phone = input(f"Enter phone number: {Y}")
+            phone = input(f"  Enter phone number: {Y}")
             print(W, end="")
 
             if phone.isnumeric() and len(phone) == 10:
                 break
             else:
-                print(f"{W}Invalid Phone Number")
+                print(f"    {R}Invalid Phone Number{W}")
         except ValueError:
-            print(f"{W}Invalid Input\n")
+            print(f"    {R}Invalid Input\n{W}")
         except EOFError:
-            print(f"{W}Invalid Input\n")
+            print(f"    {R}Invalid Input\n{W}")
 
     print("\n----------------------------------------\n")
 
@@ -434,7 +437,7 @@ def logSession():
     grade12Batches = ask("SELECT Batch_Name, Batch_ID FROM Batch where Class_ID = 'CLS-12';")
 
     if len(grade11Batches) != 0:
-        print(f"{LY}  Batches in Class 11{N}")
+        print(f"{Y}  Batches in Class 11{N}")
         print("   ", tabulate(grade11Batches, headers=["Name", "Batch ID"], tablefmt="pretty").replace("\n", "\n    "))
 
         i = 0
@@ -442,13 +445,13 @@ def logSession():
             grade11Batches[i] = grade11Batches[i][1]
             i += 1
     else:
-        print(f"{LY}  Batches in Class 11{N}")
+        print(f"{Y}  Batches in Class 11{N}")
         print("    No Batches in Class 11")
 
     print()
 
     if len(grade12Batches) != 0:
-        print(f"{LY}  Batches in Class 12{N}")
+        print(f"{Y}  Batches in Class 12{N}")
         print("   ", tabulate(grade12Batches, headers=["Name", "Batch ID"], tablefmt="pretty").replace("\n", "\n    "))
 
         i = 0
@@ -456,7 +459,7 @@ def logSession():
             grade12Batches[i] = grade12Batches[i][1]
             i += 1
     else:
-        print(f"{LY}  Batches in Class 12{N}")
+        print(f"{Y}  Batches in Class 12{N}")
         print("    No Batches in Class 12")
 
     print()
@@ -480,7 +483,7 @@ def logSession():
     print(f"  Enter any particular date within last 7 days in {LY}DD-MM-YYYY{N} format to select that date\n")
     
     while True:
-        sessDate = input(f"    Enter your choice from the above list: {Y}").lower()
+        sessDate = input(f"  Enter your choice from the above list: {Y}").lower()
         print(W, end="")
         
         if sessDate == "today":
@@ -530,22 +533,23 @@ def issueNewTest():
     db = sqlite3.connect("tuition.db")
     cur = db.cursor()
 
+    print(f"{BL}{B}Test Details{N}")
+
     while True:
         try:
-            standard = input(f"Enter class (11 or 12 only): {Y}")
+            standard = input(f"  Enter class (11 or 12 only): {Y}")
             standard = int(standard)
             print(W, end="")
 
             if standard in [11, 12]:
                 break
             else:
-                print(f"{W}Out of range\n")
+                print(f"    {R}Out of range{W}")
         except ValueError:
-            print(f"{W}Invalid Input\n")
+            print(f"    {R}Invalid Input{W}")
         except EOFError:
-            print(f"{W}Invalid Input\n")
+            print(f"    {R}Invalid Input{W}")
     standard = str(standard)
-
 
     classID = ask(f"SELECT Class_ID FROM Class WHERE Class_Name = 'Class {standard}';")[0][0]
     testNum = str(len(ask(f"SELECT * FROM Test_Detail WHERE Class_ID = '{classID}';")) + 1)
@@ -555,17 +559,32 @@ def issueNewTest():
     
     testID = f"{classID}-TST-{testNum}"
 
-    testName = input(f"Enter the name of the test: {Y}").upper()
+    testName = input(f"  Enter the name of the test: {Y}").upper()
     print(W, end="")
+
+    while True:
+        try:
+            fullMarks = input(f"  Enter full marks for the test: {Y}")
+            fullMarks = int(fullMarks)
+            print(W, end="")
+            
+            if fullMarks <= 0:
+                print(f"    {R}Full Marks cannot be less than or equal to zero{W}")
+            else:
+                break
+        except ValueError:
+            print(f"    {R}Invalid Input{W}")
+        except EOFError:
+            print(f"    {R}Invalid Input{W}")
 
     print("\n----------------------------------------\n")
 
-    print(f"{BL}{B}Date Selection:{N}")
+    print(f"{BL}{B}Date Selection{N}")
     print(f"  Enter {LY}TODAY{N} to select today's date")
     print(f"  Enter any particular date in {LY}DD-MM-YYYY{N} format to select that date\n")
     
     while True:
-        testDate = input(f"    Enter your choice from the above list: {Y}").lower()
+        testDate = input(f"  Enter your choice from the above list: {Y}").lower()
         print(W, end="")
         
         if testDate == "today":
@@ -578,24 +597,6 @@ def issueNewTest():
                 break
             else:
                 print(verifiedTestDate)
-    
-    print("\n----------------------------------------\n")
-
-    while True:
-        try:
-            fullMarks = input(f"Enter full marks for the test: {Y}")
-            fullMarks = int(fullMarks)
-            print(W, end="")
-            
-            if fullMarks <= 0:
-                print(f"  {R}Full Marks cannot be less than or equal to zero{W}")
-            else:
-                break
-        except ValueError:
-            print(f"  {R}Invalid Input{W}")
-        except EOFError:
-            print(f"  {R}Invalid Input{W}")
-
     try:
         cur.execute(f"INSERT INTO Test_Detail VALUES ('{testID}', '{classID}', '{testName}', '{testDate}', '{fullMarks}')")
         db.commit()
@@ -606,17 +607,26 @@ def issueNewTest():
         print("Please try again\n")
         input("Hit ENTER to continue... ")
         __import__('os').system('cls')
-        issueNewTest()
+        issueNewFee()
 
 
 # Log test performance
 def logTestPerformance():
     # Test Selection
     print(f"{B}{BL}Unlogged Test Selection:{N}")
-    testNameCombination = ask("SELECT Test_Name, Test_ID FROM Test_Detail td WHERE NOT EXISTS (SELECT 'any' FROM Test_Performance tp WHERE td.Test_ID = tp.Test_ID );")
+    testNameCombination = ask("""
+        SELECT Class_Name, Test_Name, Test_ID
+        FROM Test_Detail td NATURAL JOIN Class
+        WHERE NOT EXISTS (
+            SELECT 'any'
+            FROM Test_Performance tp
+            WHERE td.Test_ID = tp.Test_ID
+        )
+        ORDER BY Date DESC;
+    """)
     unloggedTests = toList(ask("SELECT Test_ID FROM Test_Detail td WHERE NOT EXISTS (SELECT 'any' FROM Test_Performance tp WHERE td.Test_ID = tp.Test_ID );"))
 
-    table = "  " + tabulate(testNameCombination, headers=["Test Name", "ID"], tablefmt="pretty").replace("\n", "\n  ")
+    table = "  " + tabulate(testNameCombination, headers=["Class", "Test Name", "ID"], tablefmt="pretty").replace("\n", "\n  ")
     print(table)
     print()
 
@@ -637,13 +647,13 @@ def logTestPerformance():
 
     testPerformanceValueList = []
 
-    print(f"{BL}{B}Marks population:{N}")
+    print(f"{BL}{B}Marks population{N}")
     print(f"  ENTER {LY}ABS{N} TO MARK ABSENT\n")
 
     for i in idNameBatch:
         while True:
             try:
-                markScored = input(f"  Student ID: {Y}{i[0]}{W} | Name: {Y}{i[1]}{W} | Batch: {Y}{i[0]}{W} | Marks Scored (Out of {fullMarks}): {Y}").strip().upper()
+                markScored = input(f"  Student ID: {Y}{i[0]}{W} | Name: {Y}{i[1]}{W} | Batch: {Y}{i[2]}{W} | Marks Scored (Out of {fullMarks}): {Y}").strip().upper()
                 print(W, end="")
 
                 if markScored == "ABS":
@@ -677,7 +687,7 @@ def logTestPerformance():
         print("Please try again\n")
         input("Hit ENTER to continue... ")
         __import__('os').system('cls')
-        issueNewTest()
+        logTestPerformance()
 
 
 # Issue new fee
@@ -691,17 +701,17 @@ def issueNewFee():
             if standard in [11, 12]:
                 break
             else:
-                print(f"    {W}Out of range")
+                print(f"    {R}Out of range{W}")
         except ValueError:
-            print(f"    {W}Invalid Input")
+            print(f"    {R}Invalid Input{W}")
         except EOFError:
-            print(f"    {W}Invalid Input")
+            print(f"    {R}Invalid Input{W}")
     standard = str(standard)
     
     print("\n----------------------------------------\n")
 
     # Issue Date
-    print(f"{BL}{B}Issue Date:{N}")
+    print(f"{BL}{B}Issue Date{N}")
     
     feeIssueDate = str(date.today())
     today_date = str(date.today()).split("-")
@@ -837,7 +847,7 @@ def issueNewFee():
             print("Please try again\n")
             input("Hit ENTER to continue... ")
             __import__('os').system('cls')
-            issueNewTest()
+            issueNewFee()
     elif choice == 2:
         studIDNameCombination = ask(f"SELECT Stud_ID, Stud_Name FROM Student WHERE Batch_ID = '{batchID}'")
         studIDList = toList(ask(f"SELECT Stud_ID FROM Student WHERE Batch_ID = '{batchID}'"))
@@ -887,7 +897,7 @@ def issueNewFee():
             print("Please try again\n")
             input("Hit ENTER to continue... ")
             __import__('os').system('cls')
-            issueNewTest()
+            issueNewFee()
     else:
         studIDNameCombination = ask(f"SELECT Stud_ID, Stud_Name FROM Student WHERE Batch_ID = '{batchID}'")
         studIDList = toList(ask(f"SELECT Stud_ID FROM Student WHERE Batch_ID = '{batchID}'"))
@@ -938,7 +948,7 @@ def issueNewFee():
             print("Please try again\n")
             input("Hit ENTER to continue... ")
             __import__('os').system('cls')
-            issueNewTest()
+            issueNewFee()
 
 
 # Log payments
@@ -956,11 +966,11 @@ def logPayments():
                 classID = f"CLS-{standard}"
                 break
             else:
-                print(f"{W}Out of range\n")
+                print(f"    {R}Out of range{W}")
         except ValueError:
-            print(f"{W}Invalid Input\n")
+            print(f"    {R}Invalid Input{W}")
         except EOFError:
-            print(f"{W}Invalid Input\n")
+            print(f"    {R}Invalid Input{W}")
 
     print("\n----------------------------------------\n")
 
@@ -1043,6 +1053,7 @@ def logPayments():
                     print(W, end="")
 
                     if selectYN == "Y":
+                        __import__('os').system('cls')
                         logPayments()
                     elif selectYN == "N":
                         return
@@ -1112,6 +1123,7 @@ def logPayments():
                 print(W, end="")
 
                 if logYN == "Y":
+                    __import__('os').system('cls')
                     logPayments()
                 elif logYN == "N":
                     return
@@ -1134,4 +1146,5 @@ def logPayments():
             print("Please try again\n")
             input("Hit ENTER to continue... ")
             __import__('os').system('cls')
-            issueNewTest()
+            logPayments()
+
