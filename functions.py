@@ -1014,7 +1014,7 @@ def logPayments():
     dueFeesNameCombination = ask(f"""
         SELECT fa.Fee_ID, f.Fee_Name
         FROM Fee_Assignment fa JOIN Fee f ON fa.Fee_ID = f.Fee_ID
-        WHERE fa.Stud_ID = 'BAT-05-STU-01'
+        WHERE fa.Stud_ID = '{studID}'
         AND NOT EXISTS (
             SELECT 1 FROM Payment p WHERE p.Fee_ID = fa.Fee_ID AND p.Stud_ID = fa.Stud_ID
         );
@@ -1023,7 +1023,7 @@ def logPayments():
     dueFeeIDList = toList(ask(f"""
         SELECT fa.Fee_ID
         FROM Fee_Assignment fa JOIN Fee f ON fa.Fee_ID = f.Fee_ID
-        WHERE fa.Stud_ID = 'BAT-05-STU-01'
+        WHERE fa.Stud_ID = '{studID}'
         AND NOT EXISTS (
             SELECT 1 FROM Payment p WHERE p.Fee_ID = fa.Fee_ID AND p.Stud_ID = fa.Stud_ID
         );
@@ -1161,3 +1161,55 @@ def pivotBatchTime():
     ]
     print(" ", tabulate(ask("SELECT * FROM Batch_Time_Pivot"), headers=days, tablefmt="pretty").replace("\n", "\n  "))
 
+
+# See student detail
+def seeStudDetail():
+    print(f"{BL}{B}Student Details{N}")
+
+    print(f"  {LY}Enter {Y}1{LY} to list all Student Details grouped by Batch")
+    print(f"  {LY}Enter {Y}2{LY} to list all Student Details grouped by Class\n")
+
+    while True:
+        selection = input(f"  Enter your choice from the above list: {Y}")
+        print(W, end="")
+
+        try:
+            selection = int(selection)
+
+            if selection >= 1 and selection <= 6:
+                break
+            else:
+                print(f"    {R}Out of Range Input{W}")
+        except ValueError:
+            print(f"    {R}Invalid Input{W}")
+        except EOFError:
+            print(f"    {R}Invalid Input{W}")
+
+    if selection == 1:
+        batchIDNameList = toList(ask("select Batch_ID, Batch_Name from Batch;"))
+        header = ["Class", "Student ID", "Name", "Phone No.", "Batch", "Date of Joining"]
+
+        print()
+
+        for i in batchIDNameList:
+            print(f"  ID: {Y}{i[0]}  {W}|  {Y}Name: {i[1]}{W}")
+            print("   ", tabulate(ask(f"""
+                SELECT Class_name, Stud_ID, Stud_Name, Phone, Batch_Name, Join_Date
+                FROM Student NATURAL JOIN Batch NATURAL JOIN Class
+                WHERE Has_Left = 0 AND Batch_ID = '{i[0]}';
+            """), headers=header, tablefmt="pretty").replace("\n", "\n    "))
+            print()
+    else:
+        classIDNameList = toList(ask("select Class_ID, Class_Name from Class;"))
+        header = ["Class", "Student ID", "Name", "Phone No.", "Batch", "Date of Joining"]
+
+        print()
+
+        for i in classIDNameList:
+            print(f"  ID: {Y}{i[0]}  {W}|  {Y}{i[1]}{W}")
+            print("   ", tabulate(ask(f"""
+                SELECT Class_name, Stud_ID, Stud_Name, Phone, Batch_Name, Join_Date
+                FROM Student NATURAL JOIN Batch NATURAL JOIN Class
+                WHERE Has_Left = 0 AND Class_ID = '{i[0]}';
+            """), headers=header, tablefmt="pretty").replace("\n", "\n    "))
+            print()
