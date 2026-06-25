@@ -626,68 +626,72 @@ def logTestPerformance():
     """)
     unloggedTests = toList(ask("SELECT Test_ID FROM Test_Detail td WHERE NOT EXISTS (SELECT 'any' FROM Test_Performance tp WHERE td.Test_ID = tp.Test_ID );"))
 
-    table = "  " + tabulate(testNameCombination, headers=["Class", "Test Name", "ID"], tablefmt="pretty").replace("\n", "\n  ")
-    print(table)
-    print()
+    if len(unloggedTests) == 0:
+        print("  No Tests Left to Be Logged! Enjoy some Chai-Samosa!")
+    else:
+        table = "  " + tabulate(testNameCombination, headers=["Class", "Test Name", "ID"], tablefmt="pretty").replace("\n", "\n  ")
+        print(table)
+        print()
 
-    while True:
-        testID = input(f"  Select an unlogged test from the above list (Enter the Test ID): {Y}").strip().upper()
-        print(W, end="")
-
-        if testID in unloggedTests:
-            break
-        else:
-            print(f"    {R}Test with ID {Y}{testID}{R} is either does not exit or has been logged already{W}")
-
-    print("\n----------------------------------------\n")
-
-    # Marks population
-    idNameBatch = toList(ask(f"SELECT Stud_ID, Stud_Name, Batch_Name FROM Student NATURAL JOIN Batch NATURAL JOIN Test_Detail WHERE Test_ID = '{testID}';"))
-    fullMarks = toList(ask(f"SELECT Full_Marks FROM test_Detail WHERE Test_ID = '{testID}'"))[0]
-
-    testPerformanceValueList = []
-
-    print(f"{BL}{B}Marks population{N}")
-    print(f"  ENTER {LY}ABS{N} TO MARK ABSENT\n")
-
-    for i in idNameBatch:
         while True:
-            try:
-                markScored = input(f"  Student ID: {Y}{i[0]}{W} | Name: {Y}{i[1]}{W} | Batch: {Y}{i[2]}{W} | Marks Scored (Out of {fullMarks}): {Y}").strip().upper()
-                print(W, end="")
+            testID = input(f"  Select an unlogged test from the above list (Enter the Test ID): {Y}").strip().upper()
+            print(W, end="")
 
-                if markScored == "ABS":
-                    testPerformanceValueList.append((testID, i[0], "ABSENT"))
-                    break
-                else:
-                    markScored = int(markScored)
+            if testID in unloggedTests:
+                break
+            else:
+                print(f"    {R}Test with ID {Y}{testID}{R} is either does not exit or has been logged already{W}")
 
-                    if markScored >= 0 and markScored <= fullMarks:
-                        testPerformanceValueList.append(f"('{testID}', '{i[0]}', {markScored})")
+        print("\n----------------------------------------\n")
+
+        # Marks population
+        idNameBatch = toList(ask(f"SELECT Stud_ID, Stud_Name, Batch_Name FROM Student NATURAL JOIN Batch NATURAL JOIN Test_Detail WHERE Test_ID = '{testID}';"))
+        fullMarks = toList(ask(f"SELECT Full_Marks FROM test_Detail WHERE Test_ID = '{testID}'"))[0]
+
+        testPerformanceValueList = []
+
+        print(f"{BL}{B}Marks population{N}")
+        print(f"  ENTER {LY}ABS{N} TO MARK ABSENT\n")
+
+        for i in idNameBatch:
+            while True:
+                try:
+                    markScored = input(f"  Student ID: {Y}{i[0]}{W} | Name: {Y}{i[1]}{W} | Batch: {Y}{i[2]}{W} | Marks Scored (Out of {fullMarks}): {Y}").strip().upper()
+                    print(W, end="")
+
+                    if markScored == "ABS":
+                        testPerformanceValueList.append((testID, i[0], "ABSENT"))
                         break
                     else:
-                        print(f"    Value must be in the range 0 to {fullMarks} (inclusive)")
-            except ValueError:
-                print(f"    {R}Invalid Input{W}")
-            except EOFError:
-                print(f"    {R}Invalid Input{W}")
-        
-    db = sqlite3.connect("tuition.db")
-    cur = db.cursor()
+                        markScored = int(markScored)
 
-    try:
-        for i in testPerformanceValueList:
-            cur.execute(f"INSERT INTO Test_Performance VALUES {i}")
+                        if markScored >= 0 and markScored <= fullMarks:
+                            testPerformanceValueList.append(f"('{testID}', '{i[0]}', {markScored})")
+                            break
+                        else:
+                            print(f"    Value must be in the range 0 to {fullMarks} (inclusive)")
+                except ValueError:
+                    print(f"    {R}Invalid Input{W}")
+                except EOFError:
+                    print(f"    {R}Invalid Input{W}")
+            
+        db = sqlite3.connect("tuition.db")
+        cur = db.cursor()
 
-        db.commit()
-        db.close()
-        print("\nDate population successful")
-    except Exception as e:
-        print("\nAn error occured:", e)
-        print("Please try again\n")
-        input("Hit ENTER to continue... ")
-        __import__('os').system('cls')
-        logTestPerformance()
+        try:
+            for i in testPerformanceValueList:
+                cur.execute(f"INSERT INTO Test_Performance VALUES {i}")
+
+            db.commit()
+            db.close()
+            print("\nDate population successful")
+        except Exception as e:
+            print("\nAn error occured:", e)
+            print("Please try again\n")
+            input("Hit ENTER to continue... ")
+            __import__('os').system('cls')
+            logTestPerformance()
+    
 
 
 # Issue new fee
