@@ -1261,7 +1261,7 @@ def classWideTestReport():
                     studTestData[j].append(testPerformance[j])
                     j += 1
             else:
-                print(f"Marks of soem students has not been recoreded for test with ID {testID}")
+                print(f"Marks of some students has not been recoreded for test with ID {testID}")
 
         print(f"{BL}{B}Reports{N}")
         print(f"  {Y}Individual Student Report{W}")
@@ -1295,3 +1295,85 @@ def classWideTestReport():
 
         print(f"\n  {Y}Class Aggregate Report Per Test{W}")
         print("   ", tabulate(aggregateReport, headers=header, tablefmt="pretty").replace("\n", "\n    "))
+
+
+# Batch-wise test report
+def batchWiseTestReport():
+    print(f"{BL}{B}Class Selection{N}")
+    while True:
+        try:
+            standard = input(f"  Enter class (11 or 12 only): {Y}")
+            standard = int(standard)
+            print(W, end="")
+
+            if standard in [11, 12]:
+                break
+            else:
+                print(f"    {R}Out of range\n{W}")
+        except ValueError:
+            print(f"    {R}Invalid Input\n{W}")
+        except EOFError:
+            print(f"    {R}Invalid Input\n{W}")
+
+    batchIDNameList = toList(ask(f"SELECT Batch_ID, Batch_Name FROM Batch WHERE Class_ID = 'CLS-{standard}'"))
+    testIDList = toList(ask(f"SELECT td.Test_ID FROM Test_Detail td WHERE td.Class_ID = 'CLS-{standard}' AND EXISTS (SELECT 1 FROM Test_Performance tp WHERE td.Test_ID = tp.Test_ID)"))
+    print("\n----------------------------------------\n")
+
+    if len(testIDList) == 0:
+        print("    No tests has been logged yet")
+    else:
+        print(f"{BL}{B}Reports{N}")
+        for batch in batchIDNameList:
+            studTestData = ask(f"SELECT Stud_ID, Stud_Name FROM Student NATURAL JOIN Batch WHERE Batch_ID = '{batch[0]}' AND Has_Left = 0")
+            i = 0
+            while i in range(len(studTestData)):
+                studTestData[i] = list(studTestData[i])
+                i += 1
+
+            header = ["ID", "Name"]
+            for testID in testIDList:
+                fullMarks = toList(ask(f"SELECT Full_Marks FROM Test_Detail WHERE Test_ID = '{testID}'"))[0]
+                header.append(f"{toList(ask(f"SELECT Test_Name FROM Test_Detail WHERE Test_ID = '{testID}'"))[0]} ({fullMarks})")
+                testPerformance = toList(ask(f"SELECT Marks_Scored FROM Test_Performance NATURAL JOIN Student WHERE Test_ID = '{testID}' AND Batch_ID = '{batch[0]}'"))
+
+                if len(studTestData) == len(testPerformance):
+                    j = 0
+                    while j in range(len(studTestData)):
+                        studTestData[j].append(testPerformance[j])
+                        j += 1
+                else:
+                    print(f"Marks of some students has not been recoreded for test with ID {testID}")
+
+            print(f"  Batch ID: {BL}{batch[0]}{W}  |  Batch Name: {BL}{batch[1]}{W}")
+            print(f"    {Y}Individual Student Report{W}")
+            print("     ", tabulate(studTestData, headers=header, tablefmt="pretty").replace("\n", "\n      "))
+
+            aggregateReport = []
+
+            testName = []
+            totalStud = []
+            fullMarks = []
+            absent = []
+            avgMarks = []
+            maxMark = []
+            minMark = []
+
+            for testID in testIDList:
+                testName.append(toList(ask(f"SELECT Test_Name FROM Test_Detail NATURAL JOIN Student WHERE Test_ID = '{testID}' AND Batch_ID = '{batch[0]}'"))[0])
+                totalStud.append(toList(ask(f"SELECT COUNT(*) FROM Test_Performance NATURAL JOIN Student WHERE Test_ID = '{testID}' AND Batch_ID = '{batch[0]}'"))[0])
+                fullMarks.append(toList(ask(f"SELECT Full_Marks FROM Test_Detail NATURAL JOIN Student WHERE Test_ID = '{testID}' AND Batch_ID = '{batch[0]}'"))[0])
+                absent.append(toList(ask(f"SELECT COUNT(*) FROM Test_Performance NATURAL JOIN Student WHERE Test_ID = '{testID}' AND Batch_ID = '{batch[0]}' AND Marks_Scored = 'ABSENT'"))[0])
+                avgMarks.append(toList(ask(f"SELECT AVG(Marks_Scored) FROM Test_Performance NATURAL JOIN Student WHERE Test_ID = '{testID}' AND Batch_ID = '{batch[0]}'"))[0])
+                maxMark.append(toList(ask(f"SELECT MAX(Marks_Scored) FROM Test_Performance NATURAL JOIN Student WHERE Test_ID = '{testID}' AND Batch_ID = '{batch[0]}' AND Marks_Scored != 'ABSENT'"))[0])
+                minMark.append(toList(ask(f"SELECT MIN(Marks_Scored) FROM Test_Performance NATURAL JOIN Student WHERE Test_ID = '{testID}' AND Batch_ID = '{batch[0]}' AND Marks_Scored != 'ABSENT'"))[0])
+
+            k = 0
+            while k in range(len(testIDList)):
+                aggregateReport.append([testName[k], totalStud[k], fullMarks[k], absent[k], avgMarks[k], maxMark[k], minMark[k]])
+                k += 1
+
+            header = ["Total Students", "Full Marks", "Total Absent", "Class Average", "Class Highest", "Class Lowest"]
+
+            print(f"    {Y}Batch Aggregate Report Per Test{W}")
+            print("     ", tabulate(aggregateReport, headers=header, tablefmt="pretty").replace("\n", "\n      "))
+            print()
