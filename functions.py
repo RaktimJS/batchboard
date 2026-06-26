@@ -627,7 +627,7 @@ def logTestPerformance():
     unloggedTests = toList(ask("SELECT Test_ID FROM Test_Detail td WHERE NOT EXISTS (SELECT 'any' FROM Test_Performance tp WHERE td.Test_ID = tp.Test_ID );"))
 
     if len(unloggedTests) == 0:
-        print("  No Tests Left to Be Logged! Enjoy some Chai-Samosa!")
+        print("  No Tests Left to Be Logged")
     else:
         table = "  " + tabulate(testNameCombination, headers=["Class", "Test Name", "ID"], tablefmt="pretty").replace("\n", "\n  ")
         print(table)
@@ -669,7 +669,7 @@ def logTestPerformance():
                             testPerformanceValueList.append(f"('{testID}', '{i[0]}', {markScored})")
                             break
                         else:
-                            print(f"    Value must be in the range 0 to {fullMarks} (inclusive)")
+                            print(f"    {R}Value must be in the range 0 to {fullMarks} (inclusive){W}")
                 except ValueError:
                     print(f"    {R}Invalid Input{W}")
                 except EOFError:
@@ -692,7 +692,6 @@ def logTestPerformance():
             __import__('os').system('cls')
             logTestPerformance()
     
-
 
 # Issue new fee
 def issueNewFee():
@@ -1163,7 +1162,7 @@ def pivotBatchTime():
     days = [
         "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
     ]
-    print(" ", tabulate(ask("SELECT * FROM Batch_Time_Pivot"), headers=days, tablefmt="pretty").replace("\n", "\n  "))
+    print(" ", tabulate(ask("SELECT * FROM Batch_Timetable"), headers=days, tablefmt="pretty").replace("\n", "\n  "))
 
 
 # See student detail
@@ -1217,3 +1216,82 @@ def seeStudDetail():
                 WHERE Has_Left = 0 AND Class_ID = '{i[0]}';
             """), headers=header, tablefmt="pretty").replace("\n", "\n    "))
             print()
+
+
+# Class-wide test report
+def classWideTestReport():
+    print(f"{BL}{B}Class Selection{N}")
+    while True:
+        try:
+            standard = input(f"  Enter class (11 or 12 only): {Y}")
+            standard = int(standard)
+            print(W, end="")
+
+            if standard in [11, 12]:
+                break
+            else:
+                print(f"    {R}Out of range\n{W}")
+        except ValueError:
+            print(f"    {R}Invalid Input\n{W}")
+        except EOFError:
+            print(f"    {R}Invalid Input\n{W}")
+
+    testIDList = toList(ask(f"SELECT td.Test_ID FROM Test_Detail td WHERE td.Class_ID = 'CLS-{standard}' AND EXISTS (SELECT 1 FROM Test_Performance tp WHERE td.Test_ID = tp.Test_ID)"))
+    studTestData = ask(f"SELECT Stud_ID, Stud_Name, Batch_Name FROM Student NATURAL JOIN Batch WHERE Class_ID = 'CLS-{standard}' AND Has_Left = 0")
+
+    print("\n----------------------------------------\n")
+
+    if len(testIDList) == 0:
+        print("    No tests has been logged yet")
+    else:
+        i = 0
+        while i in range(len(studTestData)):
+            studTestData[i] = list(studTestData[i])
+            i += 1
+
+        header = ["ID", "Name", "Batch"]
+        for testID in testIDList:
+            fullMarks = toList(ask(f"SELECT Full_Marks FROM Test_Detail WHERE Test_ID = '{testID}'"))[0]
+            header.append(f"{toList(ask(f"SELECT Test_Name FROM Test_Detail WHERE Test_ID = '{testID}'"))[0]} ({fullMarks})")
+            testPerformance = toList(ask(f"SELECT Marks_Scored FROM Test_Performance WHERE Test_ID = '{testID}'"))
+
+            if len(studTestData) == len(testPerformance):
+                j = 0
+                while j in range(len(studTestData)):
+                    studTestData[j].append(testPerformance[j])
+                    j += 1
+            else:
+                print(f"Marks of soem students has not been recoreded for test with ID {testID}")
+
+        print(f"{BL}{B}Reports{N}")
+        print(f"  {Y}Individual Student Report{W}")
+        print("   ", tabulate(studTestData, headers=header, tablefmt="pretty").replace("\n", "\n    "))
+
+        aggregateReport = []
+
+        testName = []
+        totalStud = []
+        fullMarks = []
+        absent = []
+        avgMarks = []
+        maxMark = []
+        minMark = []
+
+        for testID in testIDList:
+            testName.append(toList(ask(f"SELECT Test_Name FROM Test_Detail WHERE Test_ID = '{testID}'"))[0])
+            totalStud.append(toList(ask(f"SELECT COUNT(*) FROM Test_Performance WHERE Test_ID = '{testID}'"))[0])
+            fullMarks.append(toList(ask(f"SELECT Full_Marks FROM Test_Detail WHERE Test_ID = '{testID}'"))[0])
+            absent.append(toList(ask(f"SELECT COUNT(*) FROM Test_Performance WHERE Test_ID = '{testID}' AND Marks_Scored = 'ABSENT'"))[0])
+            avgMarks.append(toList(ask(f"SELECT AVG(Marks_Scored) FROM Test_Performance WHERE Test_ID = '{testID}'"))[0])
+            maxMark.append(toList(ask(f"SELECT MAX(Marks_Scored) FROM Test_Performance WHERE Test_ID = '{testID}' AND Marks_Scored != 'ABSENT'"))[0])
+            minMark.append(toList(ask(f"SELECT MIN(Marks_Scored) FROM Test_Performance WHERE Test_ID = '{testID}' AND Marks_Scored != 'ABSENT'"))[0])
+
+        k = 0
+        while k in range(len(testIDList)):
+            aggregateReport.append([testName[k], totalStud[k], fullMarks[k], absent[k], avgMarks[k], maxMark[k], minMark[k]])
+            k += 1
+
+        header = ["Total Students", "Full Marks", "Total Absent", "Class Average", "Class Highest", "Class Lowest"]
+
+        print(f"\n  {Y}Class Aggregate Report Per Test{W}")
+        print("   ", tabulate(aggregateReport, headers=header, tablefmt="pretty").replace("\n", "\n    "))
