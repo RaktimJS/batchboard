@@ -38,7 +38,6 @@ def ask(query:str, db:str = "tuition.db"):
     if data != None:
         return data
 
-
 def drawTable(query: str, db: str = "tuition.db"):
     conn = sqlite3.connect(db)
     cursor = conn.cursor()
@@ -90,6 +89,28 @@ def toList(iterable:list):
             i += 1
 
     return iterable
+
+
+# Function to return numbers in Indian Numeric Format
+def formatNumbers(num: int):
+    num = list(str(num))
+    newNum = ""
+
+    i = 0
+    while i < 3:
+        newNum = num.pop() + newNum
+        i += 1
+
+    while len(num) > 0:
+        if len(num) == 1:
+            newNum = "," + newNum
+            newNum = num.pop() + newNum
+        else:
+            newNum = "," + newNum
+            newNum = num.pop() + newNum
+            newNum = num.pop() + newNum
+
+    return newNum
 
 
 
@@ -1423,8 +1444,8 @@ def defaulters():
     """))[0]
 
     print(f"    Total Defaulters: {LY}{studDataList[0]}{W}")
-    print(f"    Total Pending Amount: {LY}{studDataList[1]}{W}")
-    print(f"    Total Pending Payment: {LY}{studDataList[2]}{W}")
+    print(f"    Total Pending Amount: {LY}₹{formatNumbers(studDataList[1])}{W}")
+    print(f"    Total Pending Payments: {LY}{studDataList[2]}{W}")
 
     print("\n----------------------------------------\n")
 
@@ -1460,6 +1481,6 @@ def defaulters():
 
             print(f"    {Y}Batch Aggregate Defaultee Report{W}")
             print(f"      Total Defaulters: {LY}{totalDefaultees}{W}")
-            print(f"      Total Pending Amount: {LY}{totalAmount}{W}")
-            print(f"      Total Pending Payment: {LY}{totalPayments}{W}")
+            print(f"      Total Pending Amount: {LY}₹{formatNumbers(totalAmount)}{W}")
+            print(f"      Total Pending Payments: {LY}{totalPayments}{W}")
             print()
