@@ -695,9 +695,10 @@ def logTestPerformance():
 
 # Issue new fee
 def issueNewFee():
+    print(f"{BL}{B}Class{N}")
     while True:
         try:
-            standard = input(f"Enter class (11 or 12 only): {Y}")
+            standard = input(f"  Enter class (11 or 12 only): {Y}")
             standard = int(standard)
             print(W, end="")
 
@@ -744,6 +745,31 @@ def issueNewFee():
                 print(verifiedFeeIssueDate)
     else:
         print(f"    {R}Invalid Input{W}")
+
+    print("\n----------------------------------------\n")
+
+    # Amount
+    print(f"{BL}{B}Amount{N}")
+
+    while True:
+        thousandYN = input(f"  Select 1000 as the amount? (Y/N): {Y}").strip().upper()
+
+        if thousandYN != "Y" and thousandYN != "N":
+            print(f"    {R}Invalid Input{W}")
+        elif thousandYN == "Y":
+            amount = 1000
+            break
+        else:
+            while True:
+                try:
+                    amount = input(f"  Enter amount: {Y}")
+                    amount = int(amount)
+                    print(W, end="")
+                    break
+                except ValueError:
+                    print(f"    {R}Invalid Input{W}")
+                except EOFError:
+                    print(f"    {R}Invalid Input{W}")
 
     print("\n----------------------------------------\n")
 
@@ -836,7 +862,7 @@ def issueNewFee():
         try:
             db = sqlite3.connect("tuition.db")
             cur = db.cursor()
-            cur.execute(f"INSERT INTO Fee VALUES ('{feeID}', '{feeIssueDate}', '{feeName}')")
+            cur.execute(f"INSERT INTO Fee VALUES ('{feeID}', '{feeIssueDate}', '{feeName}', {amount})")
 
             for i in studIDList:
                 cur.execute(f"INSERT INTO Fee_Assignment VALUES ('{feeID}', '{i}')")
@@ -885,7 +911,7 @@ def issueNewFee():
 
             db = sqlite3.connect("tuition.db")
             cur = db.cursor()
-            cur.execute(f"INSERT INTO Fee VALUES ('{feeID}', '{feeIssueDate}', '{feeName}')")
+            cur.execute(f"INSERT INTO Fee VALUES ('{feeID}', '{feeIssueDate}', '{feeName}', {amount})")
 
             for i in studIDList:
                 if i not in excludedIDList:
@@ -938,7 +964,7 @@ def issueNewFee():
 
             db = sqlite3.connect("tuition.db")
             cur = db.cursor()
-            cur.execute(f"INSERT INTO Fee VALUES ('{feeID}', '{feeIssueDate}', '{feeName}')")
+            cur.execute(f"INSERT INTO Fee VALUES ('{feeID}', '{feeIssueDate}', '{feeName}', {amount})")
             
             for i in selectedIDList:
                 cur.execute(f"INSERT INTO Fee_Assignment VALUES ('{feeID}', '{i}')")
@@ -1317,6 +1343,7 @@ def batchWiseTestReport():
 
     batchIDNameList = toList(ask(f"SELECT Batch_ID, Batch_Name FROM Batch WHERE Class_ID = 'CLS-{standard}'"))
     testIDList = toList(ask(f"SELECT td.Test_ID FROM Test_Detail td WHERE td.Class_ID = 'CLS-{standard}' AND EXISTS (SELECT 1 FROM Test_Performance tp WHERE td.Test_ID = tp.Test_ID)"))
+    
     print("\n----------------------------------------\n")
 
     if len(testIDList) == 0:
@@ -1372,8 +1399,67 @@ def batchWiseTestReport():
                 aggregateReport.append([testName[k], totalStud[k], fullMarks[k], absent[k], avgMarks[k], maxMark[k], minMark[k]])
                 k += 1
 
-            header = ["Total Students", "Full Marks", "Total Absent", "Class Average", "Class Highest", "Class Lowest"]
+            header = ["Total Students", "Full Marks", "Total Absent", "Batch Average", "Batch Highest", "Batch Lowest"]
 
             print(f"    {Y}Batch Aggregate Report Per Test{W}")
             print("     ", tabulate(aggregateReport, headers=header, tablefmt="pretty").replace("\n", "\n      "))
+            print()
+
+
+# Fee defaulters by batch
+def defaulters():
+    batchNameCombination = toList(ask(f"SELECT Class_Name, Batch_ID, Batch_Name FROM Batch NATURAL JOIN Class ORDER BY Class_ID"))
+
+    print(f"{BL}{B}Fee Defaulters per batch{N}")
+
+    print(f"  {Y}Institute Summary{W}")
+    studDataList = toList(ask(f"""
+        SELECT
+            COUNT(DISTINCT s.Stud_ID), SUM(f.Amount), COUNT(f.Fee_ID)
+        FROM Student s NATURAL JOIN Fee_Assignment fa NATURAL JOIN Fee f
+        WHERE
+            EXISTS (SELECT 1 FROM Student s NATURAL JOIN Fee_Assignment fa WHERE s.Stud_ID = fa.Stud_ID) AND
+            NOT EXISTS (SELECT 1 FROM Payment p NATURAL JOIN Fee_Assignment fa WHERE p.Stud_ID = fa.Stud_ID)
+    """))[0]
+
+    print(f"    Total Defaulters: {LY}{studDataList[0]}{W}")
+    print(f"    Total Pending Amount: {LY}{studDataList[1]}{W}")
+    print(f"    Total Pending Payment: {LY}{studDataList[2]}{W}")
+
+    print("\n----------------------------------------\n")
+
+    for i in batchNameCombination:
+        print(f"  Class: {BL}{i[0]}{W}  |  Batch ID: {BL}{i[1]}{W}  |  Batch Name: {BL}{i[2]}{W}")
+        print(f"    {Y}Individual Defaulters{W}")
+
+        studDataList = toList(ask(f"""
+                SELECT
+                    s.Stud_ID, s.Stud_Name, s.Phone, SUM(f.Amount), COUNT(f.Fee_ID)
+                FROM Student s NATURAL JOIN Fee_Assignment fa NATURAL JOIN Fee f
+                WHERE
+                    EXISTS (SELECT 1 FROM Student s NATURAL JOIN Fee_Assignment fa WHERE s.Stud_ID = fa.Stud_ID) AND
+                    NOT EXISTS (SELECT 1 FROM Payment p NATURAL JOIN Fee_Assignment fa WHERE p.Stud_ID = fa.Stud_ID) AND
+                    s.Batch_ID = '{i[1]}'
+                GROUP BY s.Stud_ID;
+        """))
+
+        if len(studDataList) == 0:
+            print(f"      {LB}No defaulters in this batch{W}\n")
+        else:
+            totalDefaultees = len(studDataList)
+            totalAmount = 0
+            totalPayments = 0
+
+            for i in studDataList:
+                totalAmount = totalAmount + i[3]
+                totalPayments = totalPayments + i[4]
+
+            header = ["ID", "Name", "Phone", "Pending Amount", "Pending Payments"]
+
+            print("     ", tabulate(studDataList, headers=header, tablefmt="pretty").replace("\n", "\n      "))
+
+            print(f"    {Y}Batch Aggregate Defaultee Report{W}")
+            print(f"      Total Defaulters: {LY}{totalDefaultees}{W}")
+            print(f"      Total Pending Amount: {LY}{totalAmount}{W}")
+            print(f"      Total Pending Payment: {LY}{totalPayments}{W}")
             print()
