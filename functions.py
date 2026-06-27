@@ -1484,3 +1484,9 @@ def defaulters():
             print(f"      Total Pending Amount: {LY}₹{formatNumbers(totalAmount)}{W}")
             print(f"      Total Pending Payments: {LY}{totalPayments}{W}")
             print()
+
+
+# 
+
+""" DATA UPDATE FUNCTIONS """
+
