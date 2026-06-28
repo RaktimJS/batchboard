@@ -130,7 +130,7 @@ def addNewBatch():
     dayTimeList = []
 
     # Generate an ID for the batch
-    cur.execute("SELECT * FROM Batch")
+    cur.execute("SELECT * FROM Batch WHERE Is_Active = 1")
     batchNum = str(len(cur.fetchall()) + 1)
 
     if len(batchNum) == 1:
@@ -158,7 +158,7 @@ def addNewBatch():
             print(f"    {R}Invalid Input\n{W}")
     standard = str(standard)
 
-    cur.execute(f"SELECT Class_ID FROM Class WHERE Class_Name = \"Class {standard}\";")
+    cur.execute(f"SELECT Class_ID FROM Class WHERE Class_Name = 'Class {standard}';")
     classID = cur.fetchall()[0][0]
 
     # Batch Name
@@ -249,7 +249,7 @@ def addNewBatch():
 
         return hrs + min
 
-    dayTimeData = ask(f"SELECT Batch_ID, Batch_Name, Time, Duration FROM Batch NATURAL JOIN Batch_Schedule WHERE Day = '{dayList[i]}' ORDER BY Time;")
+    dayTimeData = ask(f"SELECT Batch_ID, Batch_Name, Time, Duration FROM Batch NATURAL JOIN Batch_Schedule WHERE Day = '{dayList[i]}' AND Is_Active = 1 ORDER BY Time;")
 
     if len(dayTimeData) > 0:
         i = 0
@@ -396,14 +396,14 @@ def addNewStudent():
     print("\n----------------------------------------\n")
 
     # Batch Selection
-    classID = "CLS-11" if standard == 11 else "CLS-12"
-    batchNameCombination = ask(f"SELECT Batch_Name, Batch_ID FROM Batch WHERE Class_ID = '{classID}'")
-    batchIDList = toList(ask(f"SELECT Batch_ID FROM Batch WHERE Class_ID = '{classID}'"))
+    classID = "CLS-11" if standard == "11" else "CLS-12"
+    batchNameCombination = ask(f"SELECT Batch_Name, Batch_ID FROM Batch WHERE Class_ID = '{classID}' AND Is_Active = 1")
+    batchIDList = toList(ask(f"SELECT Batch_ID FROM Batch WHERE Class_ID = '{classID}' AND Is_Active = 1"))
 
-    table = "  " + tabulate(batchNameCombination, headers=["Batch Name", "ID"], tablefmt="pretty").replace("\n", "\n  ")
+    table = "    " + tabulate(batchNameCombination, headers=["Batch Name", "ID"], tablefmt="pretty").replace("\n", "\n    ")
 
     print(f"{BL}{B}Batch Selection{N}")
-    print(f"  Batches in Class {standard}:")
+    print(f"  {Y}Batches in Class {standard}{W}")
     print(table)
     print()
 
@@ -423,8 +423,9 @@ def addNewStudent():
     print("\n----------------------------------------\n")
 
     # Date of joining
+    print(f"{BL}{B}Joining Date{N}")
     while True:
-        joinDate = input(f"Enter the date of joining ('TODAY' if joined today): {Y}").strip()
+        joinDate = input(f"  Enter the date of joining ('TODAY' if joined today): {Y}").strip()
         print(W, end="")
 
         if joinDate.lower() == "today":
@@ -454,8 +455,8 @@ def addNewStudent():
 def logSession():
     print(f"{B}{BL}Batch Selection{N}")
 
-    grade11Batches = ask("SELECT Batch_Name, Batch_ID FROM Batch where Class_ID = 'CLS-11';")
-    grade12Batches = ask("SELECT Batch_Name, Batch_ID FROM Batch where Class_ID = 'CLS-12';")
+    grade11Batches = ask("SELECT Batch_Name, Batch_ID FROM Batch WHERE Class_ID = 'CLS-11' AND Is_Active = 1;")
+    grade12Batches = ask("SELECT Batch_Name, Batch_ID FROM Batch WHERE Class_ID = 'CLS-12' AND Is_Active = 1;")
 
     if len(grade11Batches) != 0:
         print(f"{Y}  Batches in Class 11{N}")
@@ -666,7 +667,7 @@ def logTestPerformance():
         print("\n----------------------------------------\n")
 
         # Marks population
-        idNameBatch = toList(ask(f"SELECT Stud_ID, Stud_Name, Batch_Name FROM Student NATURAL JOIN Batch NATURAL JOIN Test_Detail WHERE Test_ID = '{testID}';"))
+        idNameBatch = toList(ask(f"SELECT Stud_ID, Stud_Name, Batch_Name FROM Student NATURAL JOIN Batch NATURAL JOIN Test_Detail WHERE Test_ID = '{testID}' AND Is_Active = 1 AND Has_Left = 0;"))
         fullMarks = toList(ask(f"SELECT Full_Marks FROM test_Detail WHERE Test_ID = '{testID}'"))[0]
 
         testPerformanceValueList = []
@@ -772,8 +773,10 @@ def issueNewFee():
     # Amount
     print(f"{BL}{B}Amount{N}")
 
+    breakAll = False
     while True:
         thousandYN = input(f"  Select 1000 as the amount? (Y/N): {Y}").strip().upper()
+        print(W, end="")
 
         if thousandYN != "Y" and thousandYN != "N":
             print(f"    {R}Invalid Input{W}")
@@ -786,11 +789,16 @@ def issueNewFee():
                     amount = input(f"  Enter amount: {Y}")
                     amount = int(amount)
                     print(W, end="")
+                    breakAll = True
                     break
                 except ValueError:
                     print(f"    {R}Invalid Input{W}")
                 except EOFError:
                     print(f"    {R}Invalid Input{W}")
+
+        if breakAll == True:
+            break
+
 
     print("\n----------------------------------------\n")
 
@@ -831,8 +839,8 @@ def issueNewFee():
 
     # Student Selection by batch
     classID = "CLS-11" if standard == 11 else "CLS-12"
-    batchNameCombination = ask(f"SELECT Batch_Name, Batch_ID FROM Batch WHERE Class_ID = '{classID}'")
-    batchIDList = toList(ask(f"SELECT Batch_ID FROM Batch WHERE Class_ID = '{classID}'"))
+    batchNameCombination = ask(f"SELECT Batch_Name, Batch_ID FROM Batch WHERE Class_ID = '{classID}' AND Is_Active = 1")
+    batchIDList = toList(ask(f"SELECT Batch_ID FROM Batch WHERE Class_ID = '{classID}' AND Is_Active = 1"))
 
     table = "    " + tabulate(batchNameCombination, headers=["Batch Name", "ID"], tablefmt="pretty").replace("\n", "\n    ")
 
@@ -851,7 +859,7 @@ def issueNewFee():
             print(f"\tBatch with ID {Y}{batchID}{W} not available in Class 12")
 
     # Generating student ID
-    feeNum = str(len(ask(f"SELECT DISTINCT Fee_ID FROM Fee NATURAL JOIN Fee_Assignment NATURAL JOIN Student WHERE Batch_ID = '{batchID}';")) + 1)
+    feeNum = str(len(ask(f"SELECT DISTINCT Fee_ID FROM Fee NATURAL JOIN Fee_Assignment NATURAL JOIN Student WHERE Batch_ID = '{batchID}' AND Has_Left = 0;")) + 1)
     feeID = batchID + "-FEE-0" + feeNum if len(feeNum) == 1 else batchID + "-FEE-" + feeNum
 
     print("\n----------------------------------------\n")
@@ -879,7 +887,7 @@ def issueNewFee():
             print(f"    {R}Invalid input{W}")
 
     if choice == 1:
-        studIDList = toList(ask(f"SELECT Stud_ID FROM Student WHERE Batch_ID = '{batchID}'"))
+        studIDList = toList(ask(f"SELECT Stud_ID FROM Student WHERE Batch_ID = '{batchID}' AND Has_Left = 0"))
         try:
             db = sqlite3.connect("tuition.db")
             cur = db.cursor()
@@ -899,8 +907,8 @@ def issueNewFee():
             __import__('os').system('cls')
             issueNewFee()
     elif choice == 2:
-        studIDNameCombination = ask(f"SELECT Stud_ID, Stud_Name FROM Student WHERE Batch_ID = '{batchID}'")
-        studIDList = toList(ask(f"SELECT Stud_ID FROM Student WHERE Batch_ID = '{batchID}'"))
+        studIDNameCombination = ask(f"SELECT Stud_ID, Stud_Name FROM Student WHERE Batch_ID = '{batchID}' AND Has_Left = 0")
+        studIDList = toList(ask(f"SELECT Stud_ID FROM Student WHERE Batch_ID = '{batchID}' AND Has_Left = 0"))
 
         try:
             print("   ", tabulate(studIDNameCombination, headers=["ID", "Name"], tablefmt="pretty").replace("\n", "\n    "))
@@ -949,8 +957,8 @@ def issueNewFee():
             __import__('os').system('cls')
             issueNewFee()
     else:
-        studIDNameCombination = ask(f"SELECT Stud_ID, Stud_Name FROM Student WHERE Batch_ID = '{batchID}'")
-        studIDList = toList(ask(f"SELECT Stud_ID FROM Student WHERE Batch_ID = '{batchID}'"))
+        studIDNameCombination = ask(f"SELECT Stud_ID, Stud_Name FROM Student WHERE Batch_ID = '{batchID}' AND Has_Left = 0")
+        studIDList = toList(ask(f"SELECT Stud_ID FROM Student WHERE Batch_ID = '{batchID}' AND Has_Left = 0"))
 
         try:
             print("   ", tabulate(studIDNameCombination, headers=["ID", "Name"], tablefmt="pretty").replace("\n", "\n    "))
@@ -1025,8 +1033,8 @@ def logPayments():
     print("\n----------------------------------------\n")
 
     print(f"{BL}{B}Payee Selection{N}")
-    studNameIDMap = ask(f"SELECT Stud_ID, Stud_Name, Phone FROM Student NATURAL JOIN Batch WHERE Class_ID = '{classID}'")
-    studNameList = toList(ask(f"SELECT Stud_Name FROM Student NATURAL JOIN Batch WHERE Class_ID = '{classID}'"))
+    studNameIDMap = ask(f"SELECT Stud_ID, Stud_Name, Phone FROM Student NATURAL JOIN Batch WHERE Class_ID = '{classID}' AND Is_Active = 1 AND Has_Left = 0")
+    studNameList = toList(ask(f"SELECT Stud_Name FROM Student NATURAL JOIN Batch WHERE Class_ID = '{classID}' AND Is_Active = 1 AND Has_Left = 0"))
     print(" ", tabulate(studNameIDMap, headers=["ID", "Name", "Phone"], tablefmt="pretty").replace("\n", "\n  "))
 
     print()
@@ -1035,15 +1043,15 @@ def logPayments():
         print(W, end="")
         
         if studName in studNameList and studNameList.count(studName) == 1:
-            studID = toList(ask(f"SELECT Stud_ID FROM Student NATURAL JOIN Batch WHERE Class_ID = '{classID}' AND Stud_Name = '{studName}'"))[0]
+            studID = toList(ask(f"SELECT Stud_ID FROM Student NATURAL JOIN Batch WHERE Class_ID = '{classID}' AND Stud_Name = '{studName}' AND Is_Active = 1"))[0]
             break
         elif studName in studNameList and studNameList.count(studName) > 1:
             print(f"    {LB}{studNameList.count(studName)} matches found{W}\n")
 
-            studNameIDMap = ask(f"SELECT Stud_ID, Stud_Name, Phone FROM Student NATURAL JOIN Batch WHERE Class_ID = '{classID}' AND Stud_Name = '{studName}'")
+            studNameIDMap = ask(f"SELECT Stud_ID, Stud_Name, Phone FROM Student NATURAL JOIN Batch WHERE Class_ID = '{classID}' AND Stud_Name = '{studName}' AND Is_Active = 1")
             print(" ", tabulate(studNameIDMap, headers=["ID", f"Name", "Phone"], tablefmt="pretty").replace("\n", "\n  "))
 
-            studIDList = toList(ask(f"SELECT Stud_ID FROM Student"))
+            studIDList = toList(ask(f"SELECT Stud_ID FROM Student WHERE Has_Left = 0"))
 
             print()
             while True:
@@ -1085,6 +1093,7 @@ def logPayments():
 
     if len(dueFeeIDList) == 0:
         print(f"  NO FEE DUE")
+        return
     elif len(dueFeeIDList) == 1:
         print(f"  {Y}Fees assigned:{W}")
         print(" ", tabulate(dueFeesNameCombination, headers=["Fee Assigned", "Fee Description"], tablefmt="pretty").replace("\n", "\n  "))
@@ -1236,7 +1245,7 @@ def seeStudDetail():
             print(f"    {R}Invalid Input{W}")
 
     if selection == 1:
-        batchIDNameList = toList(ask("select Batch_ID, Batch_Name from Batch;"))
+        batchIDNameList = toList(ask("SELECT Batch_ID, Batch_Name FROM Batch AND Is_Active = 1;"))
         header = ["Class", "Student ID", "Name", "Phone No.", "Batch", "Date of Joining"]
 
         print()
@@ -1246,11 +1255,11 @@ def seeStudDetail():
             print("   ", tabulate(ask(f"""
                 SELECT Class_name, Stud_ID, Stud_Name, Phone, Batch_Name, Join_Date
                 FROM Student NATURAL JOIN Batch NATURAL JOIN Class
-                WHERE Has_Left = 0 AND Batch_ID = '{i[0]}';
+                WHERE Has_Left = 0 AND Batch_ID = '{i[0]}' AND Is_Active = 0;
             """), headers=header, tablefmt="pretty").replace("\n", "\n    "))
             print()
     else:
-        classIDNameList = toList(ask("select Class_ID, Class_Name from Class;"))
+        classIDNameList = toList(ask("SELECT Class_ID, Class_Name FROM Class;"))
         header = ["Class", "Student ID", "Name", "Phone No.", "Batch", "Date of Joining"]
 
         print()
@@ -1260,7 +1269,7 @@ def seeStudDetail():
             print("   ", tabulate(ask(f"""
                 SELECT Class_name, Stud_ID, Stud_Name, Phone, Batch_Name, Join_Date
                 FROM Student NATURAL JOIN Batch NATURAL JOIN Class
-                WHERE Has_Left = 0 AND Class_ID = '{i[0]}';
+                WHERE Has_Left = 0 AND Class_ID = '{i[0]}' Is_Active = 0;
             """), headers=header, tablefmt="pretty").replace("\n", "\n    "))
             print()
 
@@ -1284,7 +1293,7 @@ def classWideTestReport():
             print(f"    {R}Invalid Input\n{W}")
 
     testIDList = toList(ask(f"SELECT td.Test_ID FROM Test_Detail td WHERE td.Class_ID = 'CLS-{standard}' AND EXISTS (SELECT 1 FROM Test_Performance tp WHERE td.Test_ID = tp.Test_ID)"))
-    studTestData = ask(f"SELECT Stud_ID, Stud_Name, Batch_Name FROM Student NATURAL JOIN Batch WHERE Class_ID = 'CLS-{standard}' AND Has_Left = 0")
+    studTestData = ask(f"SELECT Stud_ID, Stud_Name, Batch_Name FROM Student NATURAL JOIN Batch WHERE Class_ID = 'CLS-{standard}' AND Has_Left = 0 AND Is_Active = 0")
 
     print("\n----------------------------------------\n")
 
@@ -1362,7 +1371,7 @@ def batchWiseTestReport():
         except EOFError:
             print(f"    {R}Invalid Input\n{W}")
 
-    batchIDNameList = toList(ask(f"SELECT Batch_ID, Batch_Name FROM Batch WHERE Class_ID = 'CLS-{standard}'"))
+    batchIDNameList = toList(ask(f"SELECT Batch_ID, Batch_Name FROM Batch WHERE Class_ID = 'CLS-{standard}' AND Is_Active = 1"))
     testIDList = toList(ask(f"SELECT td.Test_ID FROM Test_Detail td WHERE td.Class_ID = 'CLS-{standard}' AND EXISTS (SELECT 1 FROM Test_Performance tp WHERE td.Test_ID = tp.Test_ID)"))
     
     print("\n----------------------------------------\n")
@@ -1372,7 +1381,7 @@ def batchWiseTestReport():
     else:
         print(f"{BL}{B}Reports{N}")
         for batch in batchIDNameList:
-            studTestData = ask(f"SELECT Stud_ID, Stud_Name FROM Student NATURAL JOIN Batch WHERE Batch_ID = '{batch[0]}' AND Has_Left = 0")
+            studTestData = ask(f"SELECT Stud_ID, Stud_Name FROM Student NATURAL JOIN Batch WHERE Batch_ID = '{batch[0]}' AND Has_Left = 0 AND Is_Active = 1")
             i = 0
             while i in range(len(studTestData)):
                 studTestData[i] = list(studTestData[i])
@@ -1382,7 +1391,7 @@ def batchWiseTestReport():
             for testID in testIDList:
                 fullMarks = toList(ask(f"SELECT Full_Marks FROM Test_Detail WHERE Test_ID = '{testID}'"))[0]
                 header.append(f"{toList(ask(f"SELECT Test_Name FROM Test_Detail WHERE Test_ID = '{testID}'"))[0]} ({fullMarks})")
-                testPerformance = toList(ask(f"SELECT Marks_Scored FROM Test_Performance NATURAL JOIN Student WHERE Test_ID = '{testID}' AND Batch_ID = '{batch[0]}'"))
+                testPerformance = toList(ask(f"SELECT Marks_Scored FROM Test_Performance NATURAL JOIN Student WHERE Test_ID = '{testID}' AND Batch_ID = '{batch[0]}' AND Has_Left = 0"))
 
                 if len(studTestData) == len(testPerformance):
                     j = 0
@@ -1407,13 +1416,13 @@ def batchWiseTestReport():
             minMark = []
 
             for testID in testIDList:
-                testName.append(toList(ask(f"SELECT Test_Name FROM Test_Detail NATURAL JOIN Student WHERE Test_ID = '{testID}' AND Batch_ID = '{batch[0]}'"))[0])
-                totalStud.append(toList(ask(f"SELECT COUNT(*) FROM Test_Performance NATURAL JOIN Student WHERE Test_ID = '{testID}' AND Batch_ID = '{batch[0]}'"))[0])
-                fullMarks.append(toList(ask(f"SELECT Full_Marks FROM Test_Detail NATURAL JOIN Student WHERE Test_ID = '{testID}' AND Batch_ID = '{batch[0]}'"))[0])
-                absent.append(toList(ask(f"SELECT COUNT(*) FROM Test_Performance NATURAL JOIN Student WHERE Test_ID = '{testID}' AND Batch_ID = '{batch[0]}' AND Marks_Scored = 'ABSENT'"))[0])
-                avgMarks.append(toList(ask(f"SELECT AVG(Marks_Scored) FROM Test_Performance NATURAL JOIN Student WHERE Test_ID = '{testID}' AND Batch_ID = '{batch[0]}'"))[0])
-                maxMark.append(toList(ask(f"SELECT MAX(Marks_Scored) FROM Test_Performance NATURAL JOIN Student WHERE Test_ID = '{testID}' AND Batch_ID = '{batch[0]}' AND Marks_Scored != 'ABSENT'"))[0])
-                minMark.append(toList(ask(f"SELECT MIN(Marks_Scored) FROM Test_Performance NATURAL JOIN Student WHERE Test_ID = '{testID}' AND Batch_ID = '{batch[0]}' AND Marks_Scored != 'ABSENT'"))[0])
+                testName.append(toList(ask(f"SELECT Test_Name FROM Test_Detail NATURAL JOIN Student WHERE Test_ID = '{testID}' AND Batch_ID = '{batch[0]}' AND Has_Left = 0"))[0])
+                totalStud.append(toList(ask(f"SELECT COUNT(*) FROM Test_Performance NATURAL JOIN Student WHERE Test_ID = '{testID}' AND Batch_ID = '{batch[0]}' AND Has_Left = 0"))[0])
+                fullMarks.append(toList(ask(f"SELECT Full_Marks FROM Test_Detail NATURAL JOIN Student WHERE Test_ID = '{testID}' AND Batch_ID = '{batch[0]}' AND Has_Left = 0"))[0])
+                absent.append(toList(ask(f"SELECT COUNT(*) FROM Test_Performance NATURAL JOIN Student WHERE Test_ID = '{testID}' AND Batch_ID = '{batch[0]}' AND Marks_Scored = 'ABSENT' AND Has_Left = 0"))[0])
+                avgMarks.append(toList(ask(f"SELECT AVG(Marks_Scored) FROM Test_Performance NATURAL JOIN Student WHERE Test_ID = '{testID}' AND Batch_ID = '{batch[0]}' AND Has_Left = 0"))[0])
+                maxMark.append(toList(ask(f"SELECT MAX(Marks_Scored) FROM Test_Performance NATURAL JOIN Student WHERE Test_ID = '{testID}' AND Batch_ID = '{batch[0]}' AND Marks_Scored != 'ABSENT' AND Has_Left = 0"))[0])
+                minMark.append(toList(ask(f"SELECT MIN(Marks_Scored) FROM Test_Performance NATURAL JOIN Student WHERE Test_ID = '{testID}' AND Batch_ID = '{batch[0]}' AND Marks_Scored != 'ABSENT' AND Has_Left = 0"))[0])
 
             k = 0
             while k in range(len(testIDList)):
@@ -1429,7 +1438,7 @@ def batchWiseTestReport():
 
 # Fee defaulters by batch
 def defaulters():
-    batchNameCombination = toList(ask(f"SELECT Class_Name, Batch_ID, Batch_Name FROM Batch NATURAL JOIN Class ORDER BY Class_ID"))
+    batchNameCombination = toList(ask(f"SELECT Class_Name, Batch_ID, Batch_Name FROM Batch NATURAL JOIN Class ORDER BY Class_ID WHERE Is_Active = 1"))
 
     print(f"{BL}{B}Fee Defaulters per batch{N}")
 
@@ -1439,8 +1448,9 @@ def defaulters():
             COUNT(DISTINCT s.Stud_ID), SUM(f.Amount), COUNT(f.Fee_ID)
         FROM Student s NATURAL JOIN Fee_Assignment fa NATURAL JOIN Fee f
         WHERE
-            EXISTS (SELECT 1 FROM Student s NATURAL JOIN Fee_Assignment fa WHERE s.Stud_ID = fa.Stud_ID) AND
-            NOT EXISTS (SELECT 1 FROM Payment p NATURAL JOIN Fee_Assignment fa WHERE p.Stud_ID = fa.Stud_ID)
+            EXISTS (SELECT 1 FROM Student s NATURAL JOIN Fee_Assignment fa WHERE s.Stud_ID = fa.Stud_ID AND s.Has_Left = 0) AND
+            NOT EXISTS (SELECT 1 FROM Payment p NATURAL JOIN Fee_Assignment fa WHERE p.Stud_ID = fa.Stud_ID) AND
+            s.Has_Left = 0
     """))[0]
 
     print(f"    Total Defaulters: {LY}{studDataList[0]}{W}")
@@ -1460,7 +1470,8 @@ def defaulters():
                 WHERE
                     EXISTS (SELECT 1 FROM Student s NATURAL JOIN Fee_Assignment fa WHERE s.Stud_ID = fa.Stud_ID) AND
                     NOT EXISTS (SELECT 1 FROM Payment p NATURAL JOIN Fee_Assignment fa WHERE p.Stud_ID = fa.Stud_ID) AND
-                    s.Batch_ID = '{i[1]}'
+                    s.Batch_ID = '{i[1]}' AND
+                    s.Has_Left = 0
                 GROUP BY s.Stud_ID;
         """))
 
