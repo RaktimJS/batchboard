@@ -1486,7 +1486,21 @@ def defaulters():
             print()
 
 
-# 
+# Centre Dashboard
+def dashboard():
+    totalStudents = toList(ask(f"SELECT COUNT(*) FROM Student WHERE Has_Left = 0;"))[0]
+    totalBatches = toList(ask(f"SELECT COUNT(*) FROM Batch WHERE Is_Active = 1;"))[0]
+    totalTests = toList(ask(f"SELECT COUNT(*) FROM Test_Detail;"))[0]
+    totalSessions = toList(ask(f"SELECT COUNT(*) FROM Session"))[0]
+    revenueSinceCommencement = toList(ask(f"SELECT SUM(Amount) FROM Fee NATURAL JOIN PAYMENT"))[0]
+
+    print(f"{BL}{B}Centre Dashboard{N}")
+    print(f"  Total Students             : {Y}{totalStudents}{W}")
+    print(f"  Total Batches              : {Y}{totalBatches}{W}")
+    print(f"  Total Tests                : {Y}{totalTests}{W}")
+    print(f"  Total Sessions Conducted   : {Y}{totalSessions}{W}")
+    print(f"  Revenue Since Commencement : {Y}{formatNumbers(revenueSinceCommencement)}{W}")
+
 
 """ DATA UPDATE FUNCTIONS """
 
