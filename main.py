@@ -1,8 +1,7 @@
 # Entry point to the system
 
 import os, sqlite3
-
-from functions import ask as ask
+import functions
 
 
 
@@ -16,78 +15,94 @@ os.system("cls")
 # formatting options
 R = "\033[38;2;255;0;0m"
 Y = "\033[38;2;255;255;0m"
-B = "\033[38;2;0;0;255m"
+BL = "\033[38;2;0;0;255m"
 W = "\033[38;2;212;212;212m"
 LB = "\033[38;2;135;206;235m"
 LY = "\033[38;2;255;255;153m"
 
-b = "\033[1m"
-i = "\033[3m"
-u = "\033[4m"
+B = "\033[1m"
+I = "\033[3m"
+U = "\033[4m"
 
-n = "\033[0m"
-
-
+N = "\033[0m"
 
 
-# Operation selection list
-print(f"{Y}TuitionDesk v0.1{n}")
-print(f"    {LY}├── Enter {i}{b}1{n}  {Y}→{n} Add new student")
-print(f"    {LY}├── Enter {i}{b}2{n}  {Y}→{n} View student details")
-print(f"    {LY}├── Enter {i}{b}3{n}  {Y}→{n} Remove student")
-print(f"    {LY}├── Enter {i}{b}4{n}  {Y}→{n} Issue new test")
-print(f"    {LY}├── Enter {i}{b}5{n}  {Y}→{n} Log test performance")
-print(f"    {LY}├── Enter {i}{b}6{n}  {Y}→{n} View test details")
-print(f"    {LY}├── Enter {i}{b}7{n}  {Y}→{n} Issue new fee")
-print(f"    {LY}├── Enter {i}{b}8{n}  {Y}→{n} Update fee payment status")
-print(f"    {LY}├── Enter {i}{b}9{n}  {Y}→{n} View fee details")
-print(f"    {LY}├── Enter {i}{b}10{n} {Y}→{n} Add new batch")
-print(f"    {LY}├── Enter {i}{b}11{n} {Y}→{n} Update batch timing")
-print(f"    {LY}├── Enter {i}{b}12{n} {Y}→{n} Remove batch")
-print(f"    {LY}└── Enter {i}{b}13{n} {Y}→{n} Log New Session\n")
 
-try:
-    # Taking user's choice as input from the options in the above list
-    while True:     # Iterate till the input is fully valid
-        selector = input("Enter your choice from the above list: ")
+while True:
+    # Operation selection list
+    print(f"{BL}{B}BatchBoard v1{N}")
+    print(f"  {Y}CREATE{N}")
+    print(f"    ├── Enter {I}{B}1{N} {Y}→{N} Log New Session")
+    print(f"    ├── Enter {I}{B}2{N}  {Y}→{N} Add new student")
+    print(f"    ├── Enter {I}{B}3{N} {Y}→{N} Add new batch")
+    print(f"    ├── Enter {I}{B}4{N}  {Y}→{N} Issue new test")
+    print(f"    ├── Enter {I}{B}5{N}  {Y}→{N} Log test performance")
+    print(f"    ├── Enter {I}{B}6{N}  {Y}→{N} Issue new fee")
+    print(f"    ├── Enter {I}{B}7{N}  {Y}→{N} Log Payment")
+    print(f"  {Y}READ{N}")
+    print(f"    ├── Enter {I}{B}8{N}  {Y}→{N} View Batch Timetable")
+    print(f"    ├── Enter {I}{B}9{N}  {Y}→{N} View Student Details")
+    print(f"    ├── Enter {I}{B}10{N}  {Y}→{N} View Class-Wide Test Report")
+    print(f"    ├── Enter {I}{B}11{N}  {Y}→{N} View Class-Wide Test Report per Batch")
+    print(f"    ├── Enter {I}{B}12{N}  {Y}→{N} View Fee Defaulter Details")
+    print(f"  {Y}UPDATE{R} (NOT AVAILABLE YET){W}")
+    print(f"    ├── ..........")
+    print(f"    ├── ..........")
+    print(f"    ├── ..........")
+    print(f"    ├── ..........")
+    print(f"  {Y}DELETE{R} (NOT AVAILABLE YET){W}")
+    print(f"    ├── ..........")
+    print(f"    ├── ..........")
+    print(f"    ├── ..........")
+    print(f"    └── ..........\n")
 
-        try:
-            selector = int(selector)
+    try:
+        # Taking user's choice as input from the options in the above list
+        while True:     # Iterate till the input is fully valid
+            selector = input("Enter your choice from the above list: ")
 
-            if selector >= 1 and selector <= 13:
-                break
-            else:
-                print("Out of range input\n")
-        except ValueError:
-            print("Invalid Input\n")
-        except EOFError:
-            print("Invalid Input\n")
+            try:
+                selector = int(selector)
 
-    if selector == 1:
-        print("Option 1")
-    elif selector == 2:
-        print("Option 2")
-    elif selector == 3:
-        print("Option 3")
-    elif selector == 4:
-        print("Option 4")
-    elif selector == 5:
-        print("Option 5")
-    elif selector == 6:
-        print("Option 6")
-    elif selector == 7:
-        print("Option 7")
-    elif selector == 8:
-        print("Option 8")
-    elif selector == 9:
-        print("Option 9")
-    elif selector == 10:
-        print("Option 10")
-    elif selector == 11:
-        print("Option 11")
-    elif selector == 12:
-        print("Option 12")
-    elif selector == 13:
-        print("Option 13")
-except Exception as e:
-    print("An unknown error occured\n", e, sep="")
+                if selector >= 1 and selector <= 12:
+                    os.system('cls')
+                    break
+                else:
+                    if selector > 12:
+                        print(f"  Options beyond {Y}12{W} are WIP")
+                    else:
+                        print("Out of range input\n")
+            except ValueError:
+                print("Invalid Input\n")
+            except EOFError:
+                print("Invalid Input\n")
+
+        if selector == 1:
+            functions.logSession()
+        elif selector == 2:
+            functions.addNewStudent()
+        elif selector == 3:
+            functions.addNewBatch()
+        elif selector == 4:
+            functions.issueNewTest()
+        elif selector == 5:
+            functions.logTestPerformance()
+        elif selector == 6:
+            functions.issueNewFee()
+        elif selector == 7:
+            functions.logPayments()
+        elif selector == 8:
+            functions.pivotBatchTime()
+        elif selector == 9:
+            functions.seeStudDetail()
+        elif selector == 10:
+            functions.classWideTestReport()
+        elif selector == 11:
+            functions.batchWiseTestReport()
+        elif selector == 12:
+            functions.defaulters()
+
+        input(f"\n{B}Press ENTER to continue...{N}")
+        os.system('cls')
+    except Exception as e:
+        print("An unknown error occured\n", e, sep="")
