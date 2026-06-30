@@ -1438,7 +1438,7 @@ def batchWiseTestReport():
 
 # Fee defaulters by batch
 def defaulters():
-    batchNameCombination = toList(ask(f"SELECT Class_Name, Batch_ID, Batch_Name FROM Batch NATURAL JOIN Class ORDER BY Class_ID WHERE Is_Active = 1"))
+    batchNameCombination = toList(ask(f"SELECT Class_Name, Batch_ID, Batch_Name FROM Batch NATURAL JOIN Class WHERE Is_Active = 1 ORDER BY Class_ID"))
 
     print(f"{BL}{B}Fee Defaulters per batch{N}")
 
@@ -1515,3 +1515,100 @@ def dashboard():
 
 """ DATA UPDATE FUNCTIONS """
 
+def updateStudentDetail():
+    studDataList = toList(ask("SELECT Stud_ID, Class_Name, Stud_Name, Phone, Has_Left FROM Student NATURAL JOIN Batch NATURAL JOIN Class"))
+
+    for i in studDataList:
+        if i[4] == 0:
+            i[4] = "No"
+        else:
+            i[4] = "Yes"
+
+    print(" ", tabulate(studDataList, headers=["ID", "Class", "Name", "Phone", "Has Student Left"], tablefmt="pretty").replace("\n", "\n  "))
+
+    print("\n----------------------------------------\n")
+
+    print(f"{BL}{B}Data Update{N}")
+    while True:
+        studIDList = toList(ask("SELECT Stud_ID FROM Student"))
+        studID = input(f"  {Y}Enter a student ID (Type 'END' to end): ").strip().upper()
+        print(W, end="")
+
+        map = {"Stud_ID": None, "Stud_Name": None, "Phone": None, "Batch_ID": None}
+
+        if studID != "END" and studID in studIDList:
+            newName = input(f"    Enter new name: {Y}").strip().title()
+            print(W, end="")
+
+            # Name update
+            if newName != "":
+                map["Stud_Name"] = newName
+
+            # Phone number update
+            phoneNums = toList(ask("SELECT Phone FROM STUDENT"))
+            while True:
+                newPhone = input(f"    Enter new phone number: {Y}").strip()
+                print(W, end="")
+
+                if newPhone.isnumeric() == True and len(newPhone) == 10 and newPhone not in phoneNums:
+                    map["Phone"] = newPhone
+                    break
+                elif newPhone == "":
+                    break
+                elif newPhone in phoneNums:
+                    print(f"      {R}Phone number already exists{W}")
+                else:
+                    print(f"      {R}Invalid phone number{W}")
+
+            while True:
+                updateBatchYN = input(f"    Update Batch? (Y/N): {Y}").strip().upper()
+                print(W, end="")
+
+                if updateBatchYN == "Y":
+                    standard = (toList(ask(f"SELECT Class_ID FROM Student NATURAL JOIN Batch WHERE Stud_ID = '{studID}'"))[0].split("-"))[-1]
+                    classID = "CLS-11" if standard == "11" else "CLS-12"
+                    batchNameCombination = ask(f"SELECT Batch_Name, Batch_ID FROM Batch WHERE Class_ID = '{classID}' AND Is_Active = 1")
+                    batchIDList = toList(ask(f"SELECT Batch_ID FROM Batch WHERE Class_ID = '{classID}' AND Is_Active = 1"))
+
+                    table = "\t" + tabulate(batchNameCombination, headers=["Batch Name", "ID"], tablefmt="pretty").replace("\n", "\n\t")
+
+                    print(f"      {LB}Batches in Class {standard}{W}")
+                    print(table)
+                    print()
+
+                    while True:
+                        batchID = input(f"      Enter the ID for the new Batch: {Y}").strip().upper()
+                        print(W, end="")
+
+                        if batchID in batchIDList:
+                            newStudID = str(len(ask(f"SELECT * FROM Student WHERE Batch_ID = '{batchID}'")) + 1)
+                            newStudID = f"{batchID}-STU-0{newStudID}" if len(newStudID) == 1 else f"{batchID}-STU-{newStudID}"
+                            map["Batch_ID"] = batchID
+                            map["Stud_ID"] = newStudID
+                            break
+                        else:
+                            print(f"\tBatch with ID {Y}{batchID}{W} not available in Class 12")
+                    break
+                elif updateBatchYN == "N":
+                    break
+                else:
+                    print(f"      {R}Invalid Input{W}")
+
+            try:
+                db = sqlite3.connect("tuition.db")
+                cur = db.cursor()
+                for i in map:
+                    if map[i] != None:
+                        cur.execute(f"UPDATE Student SET {i} = '{map[i]}' WHERE Stud_ID = '{studID}'")
+                db.commit()
+                db.close()
+                print(f"    {B}Date population successful{N}\n")
+            except Exception as e:
+                print("\nAn error occured:", e)
+                print("Please try again\n")
+                input("Hit ENTER to continue... ")
+                __import__('os').system('cls')
+        elif studID == "END":
+            break
+        else:
+            print(f"    {R}Student with ID {studID} not found{W}")
