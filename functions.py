@@ -130,7 +130,7 @@ def addNewBatch():
     dayTimeList = []
 
     # Generate an ID for the batch
-    cur.execute("SELECT * FROM Batch WHERE Is_Active = 1")
+    cur.execute("SELECT * FROM Batch")
     batchNum = str(len(cur.fetchall()) + 1)
 
     if len(batchNum) == 1:
@@ -1515,6 +1515,7 @@ def dashboard():
 
 """ DATA UPDATE FUNCTIONS """
 
+# Student details update
 def updateStudentDetail():
     studDataList = toList(ask("SELECT Stud_ID, Class_Name, Stud_Name, Phone, Has_Left FROM Student NATURAL JOIN Batch NATURAL JOIN Class"))
 
@@ -1528,7 +1529,7 @@ def updateStudentDetail():
 
     print("\n----------------------------------------\n")
 
-    print(f"{BL}{B}Data Update{N}")
+    print(f"{BL}{B}Update Student Details{N}")
     while True:
         studIDList = toList(ask("SELECT Stud_ID FROM Student"))
         studID = input(f"  {Y}Enter a student ID (Type 'END' to end): ").strip().upper()
@@ -1612,3 +1613,102 @@ def updateStudentDetail():
             break
         else:
             print(f"    {R}Student with ID {studID} not found{W}")
+
+
+# Batch details update
+def updateBatchDetails():
+    print(f"{BL}{B}Update Batch Details{N}")
+    batchData = toList(ask("SELECT * FROM Batch"))
+
+    for i in batchData:
+        if i[1] == "CLS-11":
+            i[1] = "11"
+        else:
+            i[1] = "12"
+
+        if i[-1] == 1:
+            i[-1] = "Yes"
+        else:
+            i[-1] = "No"
+
+    print(" ", tabulate(batchData, headers=["ID", "Class", "Batch Name", "Is Batch Active"], tablefmt="pretty").replace("\n", "\n  "))
+    print()
+
+    while True:
+        batchIDList = toList(ask("SELECT Batch_ID FROM Batch"))
+        batchID = input(f"{Y}  Enter a Batch ID (Type 'END' to end): {Y}").strip().upper()
+        print(W, end="")
+
+        map = {
+            "Class_ID": None,
+            "Batch_Name": None,
+            "Is_Active": None
+        }
+
+        if batchID != "END" and batchID in batchIDList:
+            while True:
+                try:
+                    standard = (toList(ask(f"SELECT Class_ID FROM Batch WHERE Batch_ID = '{batchID}'"))[0]).split("-")[1]
+                    standard = int(standard)
+                    print(W, end="")
+
+                    if standard == 11:
+                        map["Class_ID"] = "CLS-11"
+                        break
+                    elif standard == 12:
+                        map["Class_ID"] = "CLS-12"
+                        break
+                    else:
+                        print(f"      {R}Out of range{W}")
+                except ValueError:
+                    print(f"      {R}Invalid Input{W}")
+                except EOFError:
+                    print(f"      {R}Invalid Input{W}")
+
+            batchName = input(f"    Enter new name for the batch: {Y}").strip()
+            print(W, end="")
+
+            if batchName != "":
+                map["Batch_Name"] = batchName
+            
+            if toList(ask(f"SELECT Is_Active FROM Batch WHERE batch_ID = '{batchID}'"))[0] == 1:
+                toggleActive = input(f"    Do you want to deactivate this batch (Yes/No): {Y}").strip().upper()
+                print(W, end="")
+
+                if toggleActive == "YES":
+                    map["Is_Active"] = 0
+                    pass
+                elif toggleActive == "NO" or toggleActive == "":
+                    pass
+                else:
+                    print(f"      {R}Invalid Input{W}")
+            else:
+                toggleActive = input(f"    Do you want to reactivate this batch (Yes/No): {Y}").strip().upper()
+                print(W, end="")
+
+                if toggleActive == "YES":
+                    map["Is_Active"] = 1
+                    pass
+                elif toggleActive == "NO" or toggleActive == "":
+                    pass
+                else:
+                    print(f"      {R}Invalid Input{W}")
+        elif batchID != "END" and batchID not in batchIDList:
+            print(f"    {R}Invalid Input{W}")
+        else:
+            pass
+
+        try:
+            db = sqlite3.connect("tuition.db")
+            cur = db.cursor()
+            for i in map:
+                if map[i] != None:
+                    cur.execute(f"UPDATE Batch SET {i} = '{map[i]}' WHERE Batch_ID = '{batchID}'")
+            db.commit()
+            db.close()
+            print(f"    {B}Date population successful{N}\n")
+        except Exception as e:
+            print("\nAn error occured:", e)
+            print("Please try again\n")
+            input("Hit ENTER to continue... ")
+            __import__('os').system('cls')
