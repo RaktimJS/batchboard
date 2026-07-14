@@ -520,7 +520,7 @@ def logSession():
             if verifiedLogDate == True:
                 if datetime.strptime(sessDate, "%d-%m-%Y").date() >= date.today() - timedelta(days=7) and datetime.strptime(sessDate, "%d-%m-%Y").date() <= date.today():
                     break
-                elif datetime.strftime(sessDate) >= date.today():
+                elif datetime.strptime(sessDate, "%d-%m-%Y").date() >= date.today():
                     print(f"{R}Can't log future sessions{W}")
                 else:
                     print(f"{R}Can't log a session after 7 days of conducting it{W}")
@@ -1712,3 +1712,81 @@ def updateBatchDetails():
             print("Please try again\n")
             input("Hit ENTER to continue... ")
             __import__('os').system('cls')
+
+
+# Update logged session date
+def updateSessionDate():
+    last7days = []
+    day = date.today()
+
+    for i in range(7):
+        last7days.append(str(day - timedelta(days = i)))
+
+    batchNameCombination = ask(f"SELECT Batch_Name, Batch_ID FROM Batch WHERE Is_Active = 1")
+    batchIDList = toList(ask(f"SELECT Batch_ID FROM Batch WHERE Is_Active = 1"))
+
+    table = "  " + tabulate(batchNameCombination, headers=["Batch Name", "ID"], tablefmt="pretty").replace("\n", "\n  ")
+
+    print(f"{BL}{B}Batch Selection{N}")
+    print(table)
+    print()
+
+    while True:
+        while True:
+            batchID = input(f"  {Y}Enter the Batch ID (Type 'END' to end): ").strip().upper()
+            print(W, end="")
+
+            if batchID in batchIDList:
+                sessions = ask(f"SELECT Session_ID, Date FROM Session WHERE Date IN {tuple(last7days)} AND Batch_ID = '{batchID}'")
+                break
+            elif batchID == "END":
+                return
+            else:
+                print(f"    {R}Batch with ID {batchID} not available{W}")
+
+        if len(sessions) != 0:
+            print(f"    Sessions conducted in {batchID} in last 7 days{N}")
+            print("     ", tabulate(sessions, headers=["ID", "Date"], tablefmt="pretty").replace("\n", "\n      "))
+            print()
+
+            sessIDList = toList(ask(f"SELECT Session_ID FROM Session WHERE Date IN {tuple(last7days)} AND Batch_ID = '{batchID}'"))
+
+            while True:
+                sessID = input(f"    Enter session ID: {Y}").strip().upper()
+                print(W, end="")
+
+                if sessID in sessIDList:
+                    break
+                else:
+                    print(f"      {R}Session with ID {sessID} doesn't exist{W}")
+
+            while True:
+                newDate = input(f"    Enter corrected session conduction date (DD-MM-YYYY format): {Y}").strip().upper()
+                print(W, end="")
+
+                verifiedDate = isDateValid(newDate, 6)
+
+                if verifiedDate == True:
+                    if newDate in last7days:
+                        break
+                    elif datetime.strptime(newDate, "%d-%m-%Y").date() >= date.today():
+                        print(f"      {R}Can't log future sessions{W}")
+                    else:
+                        print(f"      {R}Can't log a session after 7 days of conducting it{W}")
+                else:
+                    print(verifiedDate)
+
+            try:
+                db = sqlite3.connect("tuition.db")
+                cur = db.cursor()
+                cur.execute(f"UPDATE Session SET Date = '{newDate}' WHERE Batch_ID = '{batchID}'")
+                db.commit()
+                db.close()
+                print(f"    {B}Date population successful{N}\n")
+            except Exception as e:
+                print("\nAn error occured:", e)
+                print("Please try again\n")
+                input("Hit ENTER to continue...")
+                __import__('os').system('cls')
+        else:
+            print("    No sessions conducted in the batch since last 7 days")
